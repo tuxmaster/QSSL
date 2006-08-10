@@ -15,7 +15,7 @@
 # Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
-CONFIG		+= qt release
+CONFIG	+= qt release
 QT		-= gui
 QT		+= network
 #Mit Debug Infos? ja/nein

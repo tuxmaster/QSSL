@@ -21,13 +21,16 @@
 
 QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 {
+	//OpenSSL initialisieren
+	SSL_load_error_strings();
+	SSL_library_init();
+	//OpenSSL Verbindung aufbauen, hier lassen wir erst mal alle SSL Versionen zu.
+	K_OpenSSLVerbindung=SSL_CTX_new(SSLv23_client_method());	
 }
 
-void QFrankSSL::VerbindungSetzen(QTcpSocket *verbindung)
+QFrankSSL::~QFrankSSL()
 {
-	if(verbindung->state()==QAbstractSocket::ConnectedState)
-	{
-		verbindung->disconnect();
-		K_Verbindung=verbindung;
-	}
+	//OpenSSL aufräumen
+	ERR_free_strings();
+	SSL_CTX_free(K_OpenSSLVerbindung);
 }

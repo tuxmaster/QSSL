@@ -20,27 +20,36 @@
 #ifndef QFRANKSSL_H
 #define QFRANKSSL_H
 
+#include <QtNetwork>
+
 //Unter Windows  braucht man Hilfe beim Exportieren
+#ifdef BIBLIOTHEK_BAUEN
+	#ifdef Q_WS_WIN
+		#define DLL_BAUEN
+	#endif
+//Open SSL Header
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif
 #ifdef Q_WS_WIN 
 	#ifdef DLL_BAUEN
 		#define DLL_EXPORT __declspec(dllexport)
 	#else
-		#define DLL_EXPORT __declspec(dllimport)
+			#define DLL_EXPORT __declspec(dllimport)
 	#endif
 #else
-	#define DLL_EXPORT
+		#define DLL_EXPORT
 #endif
-
-#include <QtNetwork>
 
 class DLL_EXPORT QFrankSSL: public QTcpSocket
 {
 	Q_OBJECT
 	public:
 				QFrankSSL(QObject* eltern);
-				void		VerbindungSetzen(QTcpSocket *verbindung);
-
+				~QFrankSSL();
+				
 	private:
-				QTcpSocket	*K_Verbindung;			
+				SSL_CTX*	K_OpenSSLVerbindung;
+							
 };
 #endif

@@ -16,11 +16,21 @@
 
 PROJEKTTEIL	= Bibliothek
 TEMPLATE	= lib
-VERSION		= 0.1.0
-include (../../Vorgaben.pri)
-TARGET		= qssl
 CONFIG		+= dll
-win32:DEFINES	+= DLL_BAUEN
+include (../../Vorgaben.pri)
+VERSION		= 0.1.0
+TARGET		= qssl
+DEFINES		+= BIBLIOTHEK_BAUEN
+
+win32{
+	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8b/include
+	LIBS		+= -L../../../../../OpenSSL/0.9.8b/lib -lssleay32 -llibeay32
+}
+unix{
+	INCLUDEPATH	+= /usr/include
+	LIBS		+= -L/usr/lib -lssl
+}
+
 
 HEADERS		= Quellen/qssl.h
 SOURCES		= Quellen/qssl.cpp 
