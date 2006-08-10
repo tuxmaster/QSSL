@@ -19,4 +19,7 @@ TEMPLATE	= app
 include (../../Vorgaben.pri)
 TARGET		= demo
 win32:CONFIG	+= console
+LIBS		+= -lqssl -L$$DESTDIR
+INCLUDEPATH	+= ../Bibliothek/Quellen
 
+SOURCES		= Quellen/demo.cpp

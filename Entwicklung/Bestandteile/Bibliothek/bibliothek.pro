@@ -21,3 +21,6 @@ include (../../Vorgaben.pri)
 TARGET		= qssl
 CONFIG		+= dll
 win32:DEFINES	+= DLL_BAUEN
+
+HEADERS		= Quellen/qssl.h
+SOURCES		= Quellen/qssl.cpp 

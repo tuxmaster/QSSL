@@ -25,5 +25,5 @@ else {
 	system(echo $$PFAD >/tmp/x.x)
 }
 //TRANSLATIONS	= qssl.ts
-SUBDIRS	+= Bestandteile/Demo\
-	   Bestandteile/Bibliothek
+SUBDIRS		+=  Bestandteile/Bibliothek\
+				Bestandteile/Demo
