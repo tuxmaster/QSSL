@@ -17,11 +17,13 @@
  *  
  */
 
+#include <QtCore>
 #include <qssl.h>
 
 int main(int argc, char *argv[])
 {
 	QCoreApplication Programm(argc,argv);
 	QFrankSSL Verbindung(&Programm);
-	return 0;
+	Verbindung.VerbindungHerstellen("localhost",1234);
+	return Programm.exec();
 }

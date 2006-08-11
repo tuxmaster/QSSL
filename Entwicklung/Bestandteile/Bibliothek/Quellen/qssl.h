@@ -30,7 +30,11 @@
 //Open SSL Header
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#else
+	class SSL_CTX;
+	class SSL;
 #endif
+
 #ifdef Q_WS_WIN 
 	#ifdef DLL_BAUEN
 		#define DLL_EXPORT __declspec(dllexport)
@@ -47,9 +51,22 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 	public:
 				QFrankSSL(QObject* eltern);
 				~QFrankSSL();
+				void			VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart=QIODevice::ReadWrite);
+
+	signals:
+				void			SSLFehler(const QString fehlertext)const;
 				
 	private:
-				SSL_CTX*	K_OpenSSLVerbindung;
-							
+		enum			Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
+				Q_DECLARE_FLAGS(ArtDerFehlerquelle,Fehlerquelle)
+				SSL_CTX*		K_OpenSSLVerbindung;
+				SSL*			K_SSLStruktur;
+				const QString	K_SSLFehlertext(const QFrankSSL::ArtDerFehlerquelle &fehlerquelle=QFrankSSL::SSL_Bibliothek)const;
+				bool			K_SSL_Betriebsbereit;
+				int				K_SSL_Fehlercode;
+				
+	private slots:
+				void			K_FehlertextSenden();
+				void			K_MitServerVerbunden();
 };
 #endif
