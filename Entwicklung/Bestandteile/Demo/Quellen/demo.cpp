@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication Programm(argc,argv);
 	QFrankSSL Verbindung(&Programm);
-	Verbindung.VerbindungHerstellen("localhost",1234);
+	//Verbindung.VerbindungHerstellen("localhost",1234);
+	Verbindung.VerbindungHerstellen("192.168.0.2",1234);
 	return Programm.exec();
 }

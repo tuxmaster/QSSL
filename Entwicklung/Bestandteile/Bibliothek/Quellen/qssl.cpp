@@ -53,6 +53,44 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	}
 	K_SSL_Betriebsbereit=true;
 	connect(this,SIGNAL(connected()),this,SLOT(K_MitServerVerbunden()));
+	connect(this,SIGNAL(readyRead()),this,SLOT(K_DatenKoennenGelesenWerden()));
+}
+
+void QFrankSSL::K_DatenKoennenGelesenWerden()
+{
+#ifndef QT_NO_DEBUG
+	qDebug()<<QString("QFrankSSL: Es können %1 Bytes gelesen werden.").arg(bytesAvailable());
+#endif
+	K_Lesepuffer.resize(bytesAvailable());
+	K_SSL_Fehlercode=SSL_read(K_SSLStruktur,K_Lesepuffer.data(),bytesAvailable());
+	if(K_SSL_Fehlercode<=0)
+	{
+#ifndef QT_NO_DEBUG
+		qDebug()<<QString("QFrankSSL Daten konnten nicht gelesen werden. Fehlercode: %1").arg(K_SSL_Fehlercode);
+		if(K_SSL_Fehlercode<0)
+		{
+			K_SSL_Fehlercode=SSL_get_error(K_SSLStruktur,K_SSL_Fehlercode);
+			qDebug()<<"\tSSL_Error ergab:"<<K_SSL_Fehlercode<<"Code 2";
+
+		}
+#else
+		K_SSL_Fehlercode=SSL_get_error(K_SSLStruktur,K_SSL_Fehlercode);
+#endif
+		switch(K_SSL_Fehlercode)
+		{
+			case SSL_ERROR_WANT_READ:
+#ifndef QT_NO_DEBUG
+										qDebug()<<QString("QFrankSSL Daten lesen Daten: %1").arg(K_FeldNachHex(K_Lesepuffer));
+#endif									
+										break;
+		}
+	}
+	else
+	{
+#ifndef QT_NO_DEBUG
+		qDebug()<<QString("QFrankSSL Daten lesen Daten: %1").arg(K_FeldNachHex(K_Lesepuffer));
+#endif
+	}
 }
 
 void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart)
@@ -109,19 +147,6 @@ void QFrankSSL::K_MitServerVerbunden()
 		qDebug()<<"QFrankSSL SSL Aushandlung gescheitert Grund: nicht behebbar";
 #endif
 	}
-
-	/*
-	if (K_SSL_Fehlercode==0)
-	{
-	}
-	if(K_SSL_Fehlercode!=SSL_ERROR_NONE)
-	{
-#ifndef QT_NO_DEBUG
-		qDebug("QFrankSSL SSL Aushandlung der Parameter gescheitert.");
-		qDebug()<<K_SSLFehlertext(QFrankSSL::SSL_Struktur);
-#endif
-		emit SSLFehler(K_SSLFehlertext(QFrankSSL::SSL_Struktur));
-	}*/
 }
 
 
@@ -155,3 +180,25 @@ QFrankSSL::~QFrankSSL()
 	if(K_OpenSSLVerbindung!=NULL)
 		SSL_CTX_free(K_OpenSSLVerbindung);
 }
+
+#ifndef QT_NO_DEBUG
+QString QFrankSSL::K_FeldNachHex(const QByteArray &feld) const
+{
+	QString tmp="";
+	uchar low,high;
+	for(int x=0;x<feld.size();x++)
+	{
+		//Byte zerlegen
+		high=((feld.at(x) & 0xf0) >>4)+0x30;
+		low=(feld.at(x) & 0x0f)+0x30;
+		if(high>0x39)
+			high=high+0x07;
+		if(low>0x39)
+			low=low+0x07;
+		tmp.append(high);
+		tmp.append(low);
+		tmp.append("-");
+	}
+	return tmp.left(tmp.size()-1);
+}
+#endif

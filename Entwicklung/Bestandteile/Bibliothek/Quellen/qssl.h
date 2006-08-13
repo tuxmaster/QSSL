@@ -64,9 +64,15 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				const QString	K_SSLFehlertext(const QFrankSSL::ArtDerFehlerquelle &fehlerquelle=QFrankSSL::SSL_Bibliothek)const;
 				bool			K_SSL_Betriebsbereit;
 				int				K_SSL_Fehlercode;
+				QByteArray		K_Lesepuffer;
+
+#ifndef QT_NO_DEBUG
+			QString				K_FeldNachHex(const QByteArray &feld) const;
+#endif
 				
 	private slots:
 				void			K_FehlertextSenden();
 				void			K_MitServerVerbunden();
+				void			K_DatenKoennenGelesenWerden();
 };
 #endif

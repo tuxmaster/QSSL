@@ -23,8 +23,8 @@ TARGET		= qssl
 DEFINES		+= BIBLIOTHEK_BAUEN
 
 win32{
-	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8b/include
-	LIBS		+= -L../../../../../OpenSSL/0.9.8b/lib -lssleay32 -llibeay32
+	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8b-Debug/include
+	LIBS		+= -L../../../../../OpenSSL/0.9.8b-Debug/lib -lssleay32 -llibeay32
 }
 unix{
 	INCLUDEPATH	+= /usr/include
