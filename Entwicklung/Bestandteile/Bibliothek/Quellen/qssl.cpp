@@ -26,6 +26,7 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	qWarning("WARNUNG Debugversion wird benutzt.\r\nEs könnten sicherheitsrelevante Daten ausgegeben werden!!!!!");
 #endif
 	K_SSL_Betriebsbereit=false;
+	K_SSL_VerbindungAufgebaut=false;
 	//OpenSSL initialisieren
 	SSL_library_init();
 	SSL_load_error_strings();
@@ -61,6 +62,20 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 #ifndef QT_NO_DEBUG
 	qDebug()<<QString("QFrankSSL: Es können %1 Bytes gelesen werden.").arg(bytesAvailable());
 #endif
+	if(!K_SSL_VerbindungAufgebaut)
+	{
+#ifndef QT_NO_DEBUG
+		qDebug()<<"\tAber es besteht keine Verbindung zum SSL Server:(";
+#endif
+		return;
+	}
+	if(bytesAvailable()==0)
+	{
+#ifndef QT_NO_DEBUG
+		qDebug()<<"\tEs sollen 0 Byte gelesen werde. Sinnlos.";
+#endif
+		return;
+	}
 	K_Lesepuffer.resize(bytesAvailable());
 	K_SSL_Fehlercode=SSL_read(K_SSLStruktur,K_Lesepuffer.data(),bytesAvailable());
 	if(K_SSL_Fehlercode<=0)
@@ -117,35 +132,41 @@ void QFrankSSL::K_MitServerVerbunden()
 		disconnectFromHost();
 		emit SSLFehler(K_SSLFehlertext());
 	}
-	//SSL aushandeln 
-	K_SSL_Fehlercode=SSL_connect(K_SSLStruktur);
-	//<0 TLS/SSL handshake gescheitert, 1 alles ok
-	if(K_SSL_Fehlercode==1)
+	//SSL aushandeln kann machmal schiefgehen
+	for(uint Versuche=1;Versuche<40;Versuche++)
 	{
-#ifndef QT_NO_DEBUG
-		qDebug()<<"QFrankSSL SSL Aushandlung erfolgreich";
-#endif		
-	}
-	else if(K_SSL_Fehlercode<0)
-	{
-#ifndef QT_NO_DEBUG
-		qDebug()<<"QFrankSSL SSL Aushandlung gescheitert. Versuche Grund zu erfahren";
-#endif
-		K_SSL_Fehlercode=SSL_get_error(K_SSLStruktur,K_SSL_Fehlercode);
-		switch(K_SSL_Fehlercode)
+		K_SSL_Fehlercode=SSL_connect(K_SSLStruktur);
+		//<0 TLS/SSL handshake gescheitert, 1 alles ok
+		if(K_SSL_Fehlercode==1)
 		{
-			case SSL_ERROR_WANT_READ:
 #ifndef QT_NO_DEBUG
-										qDebug()<<"QFrankSSL SSL Aushandlung gescheitert Grund: Lesefehler";
-#endif									break;
-		}
-			
-	}
-	else
-	{
-#ifndef QT_NO_DEBUG
-		qDebug()<<"QFrankSSL SSL Aushandlung gescheitert Grund: nicht behebbar";
+			qDebug()<<"QFrankSSL SSL Aushandlung erfolgreich";
 #endif
+			K_SSL_VerbindungAufgebaut=true;
+			break;
+		}
+		else if(K_SSL_Fehlercode<0)
+		{
+#ifndef QT_NO_DEBUG
+			qDebug()<<"QFrankSSL SSL Aushandlung gescheitert. Versuche Grund zu erfahren";
+#endif
+			K_SSL_Fehlercode=SSL_get_error(K_SSLStruktur,K_SSL_Fehlercode);
+			switch(K_SSL_Fehlercode)
+			{
+				case SSL_ERROR_WANT_READ:
+#ifndef QT_NO_DEBUG
+											qDebug()<<"QFrankSSL SSL Aushandlung gescheitert Grund: Lesefehler";
+#endif										break;
+			}
+			K_SSL_VerbindungAufgebaut=false;	
+		}
+		else
+		{
+#ifndef QT_NO_DEBUG
+			qDebug()<<"QFrankSSL SSL Aushandlung gescheitert Grund: nicht behebbar";
+#endif
+			K_SSL_VerbindungAufgebaut=false;
+		}
 	}
 }
 
