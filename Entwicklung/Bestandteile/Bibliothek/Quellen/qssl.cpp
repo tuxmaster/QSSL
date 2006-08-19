@@ -28,6 +28,7 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	K_SSL_Betriebsbereit=false;
 	K_SSL_VerbindungAufgebaut=false;
 	K_SSL_Handshake_durchgefuehrt=false;
+	K_TunnelBereit=false;
 	//OpenSSL initialisieren
 	SSL_library_init();
 	SSL_load_error_strings();
@@ -56,9 +57,37 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 		return;
 	}
 	K_SSL_Betriebsbereit=true;
+	const char* Algorithmus=0;
+	int Prioritaet=0;
+	do
+	{
+		Algorithmus=SSL_get_cipher_list(K_SSLStruktur,Prioritaet);
+		if(Algorithmus==NULL)
+			break;
+		K_VerfuegbareAlgorithmen<<Algorithmus;
+		Prioritaet++;
+	}
+	while(true);
+#ifndef QT_NO_DEBUG
+	qDebug()<<"QFrankSSL verfügbare Algorithmen:"<<K_VerfuegbareAlgorithmen.join(":");
+#endif	
 	connect(this,SIGNAL(readyRead()),this,SLOT(K_DatenKoennenGelesenWerden()));
 	connect(this,SIGNAL(connected()),this,SLOT(K_MitServerVerbunden()));
 	
+}
+
+void QFrankSSL::DatenSenden(const QByteArray &daten)
+{
+	if(!K_TunnelBereit)
+	{
+#ifndef QT_NO_DEBUG
+		qDebug()<<"QFrankSSL DatenSenden: geht nicht, da Tunnel nicht berit.";
+#endif
+		return;
+	}
+	SSL_write(K_SSLStruktur,daten.data(),daten.size());
+	if(K_MussWasGesendetWerden())
+		K_DatenSenden();
 }
 
 void QFrankSSL::K_DatenKoennenGelesenWerden()
@@ -87,21 +116,21 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 	if(K_MussWasGesendetWerden())
 		K_DatenSenden();
 	//schauen wir mal ob wir daten haben
-	QByteArray Daten;
-	Daten.resize(BytesDa);
-	K_SSL_Fehlercode=SSL_read(K_SSLStruktur,Daten.data(),BytesDa);
+	K_EmpfangenenDaten.resize(BytesDa);
+	K_SSL_Fehlercode=SSL_read(K_SSLStruktur,K_EmpfangenenDaten.data(),BytesDa);
 	if(K_SSL_Fehlercode>0)
 	{
 #ifndef QT_NO_DEBUG
 		qDebug()<<"QFrankSSL: Daten empfangen";
 #endif
 		if(K_SSL_Fehlercode<BytesDa)
-			Daten.resize(K_SSL_Fehlercode);
+			K_EmpfangenenDaten.resize(K_SSL_Fehlercode);
+		emit DatenBereitZumAbhohlen(K_EmpfangenenDaten);
 #ifndef QT_NO_DEBUG
-		qDebug()<<"QFrankSSL: Daten:"<<K_FeldNachHex(Daten);
-		SSL_write(K_SSLStruktur,Daten.data(),Daten.size());
+		qDebug()<<"QFrankSSL: Daten:"<<K_FeldNachHex(K_EmpfangenenDaten);
+		SSL_write(K_SSLStruktur,K_EmpfangenenDaten.data(),K_EmpfangenenDaten.size());
 		if(K_MussWasGesendetWerden())
-		K_DatenSenden();
+			K_DatenSenden();
 #endif
 		
 	}
@@ -121,6 +150,11 @@ void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &p
 {
 	if(!K_SSL_Betriebsbereit)
 		return;
+	/*	setzen der zu benutzenden Verschlüsselungsalgorithmen
+		Wichig ist, das die in ansteigener Reihenfolge übergeben werden!!!.
+	*/
+	if(SSL_set_cipher_list(K_SSLStruktur,K_VerfuegbareAlgorithmen.join(":").toAscii().constData())==0)
+		qFatal("QFrankSSL kein gültiger Verschlüsselungsalgorithmus angegeben");
 	connectToHost(rechnername,port,betriebsart);
 }
 
@@ -174,6 +208,8 @@ void QFrankSSL::K_SSL_Handshake()
 		SSL_do_handshake(K_SSLStruktur);
 		if(K_MussWasGesendetWerden())
 			K_DatenSenden();
+		K_TunnelBereit=true;
+		emit TunnelBereit();
 	}
 }
 

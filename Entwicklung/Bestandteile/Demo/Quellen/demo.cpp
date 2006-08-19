@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication Programm(argc,argv);
 	QFrankSSL Verbindung(&Programm);
+	qDebug()<<"Wir haben folgeden Verschlüsselungsverfahren zur Auswahl:"<<Verbindung.VerfuegbareAlgorithmen().join(":");
+	Verbindung.VerfuegbareAlgorithmenFestlegen(QString("DHE-RSA-AES256-SHA:EDH-RSA-DES-CBC3-SHA").split(":"));
 	Verbindung.VerbindungHerstellen("localhost",1234);
 	//Verbindung.VerbindungHerstellen("192.168.0.2",1234);
 	return Programm.exec();

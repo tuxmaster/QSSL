@@ -52,26 +52,36 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 	public:
 				QFrankSSL(QObject* eltern);
 				~QFrankSSL();
-				void			VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart=QIODevice::ReadWrite);
+				void				VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart=QIODevice::ReadWrite);
+				const QStringList	VerfuegbareAlgorithmen()const{return K_VerfuegbareAlgorithmen;}
+				void				VerfuegbareAlgorithmenFestlegen(const QStringList &welche){K_VerfuegbareAlgorithmen=welche;}
+	public slots:
+				void				DatenSenden(const QByteArray &daten);
 
 	signals:
-				void			SSLFehler(const QString fehlertext)const;
+				void				SSLFehler(const QString fehlertext)const;
+				void				DatenBereitZumAbhohlen(const QByteArray &daten)const;
+				void				TunnelBereit()const;
 				
 	private:
-		enum	Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
+				enum				Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
+				enum				StatusDerVerbidnung{VERBINDEN=0x00,HANDSCHLAG=0x01,VERBUNDEN=0x02};
 				Q_DECLARE_FLAGS(ArtDerFehlerquelle,Fehlerquelle)
-				SSL_CTX*		K_OpenSSLVerbindung;
-				SSL*			K_SSLStruktur;
-				BIO*			K_Empfangspuffer;
-				BIO*			K_Sendepuffer;
-				const QString	K_SSLFehlertext(const QFrankSSL::ArtDerFehlerquelle &fehlerquelle=QFrankSSL::SSL_Bibliothek)const;
-				bool			K_SSL_Betriebsbereit;
-				bool			K_SSL_VerbindungAufgebaut;
-				bool			K_SSL_Handshake_durchgefuehrt;
-				bool			K_MussWasGesendetWerden();
-				int				K_SSL_Fehlercode;
-				void			K_DatenSenden();
-				void			K_SSL_Handshake();
+				SSL_CTX*			K_OpenSSLVerbindung;
+				SSL*				K_SSLStruktur;
+				BIO*				K_Empfangspuffer;
+				BIO*				K_Sendepuffer;
+				const QString		K_SSLFehlertext(const QFrankSSL::ArtDerFehlerquelle &fehlerquelle=QFrankSSL::SSL_Bibliothek)const;
+				bool				K_SSL_Betriebsbereit;
+				bool				K_SSL_VerbindungAufgebaut;
+				bool				K_SSL_Handshake_durchgefuehrt;
+				bool				K_TunnelBereit;
+				bool				K_MussWasGesendetWerden();
+				int					K_SSL_Fehlercode;
+				void				K_DatenSenden();
+				void				K_SSL_Handshake();
+				QByteArray			K_EmpfangenenDaten;
+				QStringList			K_VerfuegbareAlgorithmen;
 
 #ifndef QT_NO_DEBUG
 			QString				K_FeldNachHex(const QByteArray &feld) const;
