@@ -33,6 +33,7 @@
 #else
 	class SSL_CTX;
 	class SSL;
+	class BIO;
 #endif
 
 #ifdef Q_WS_WIN 
@@ -57,15 +58,20 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void			SSLFehler(const QString fehlertext)const;
 				
 	private:
-		enum			Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
+		enum	Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
 				Q_DECLARE_FLAGS(ArtDerFehlerquelle,Fehlerquelle)
 				SSL_CTX*		K_OpenSSLVerbindung;
 				SSL*			K_SSLStruktur;
+				BIO*			K_Empfangspuffer;
+				BIO*			K_Sendepuffer;
 				const QString	K_SSLFehlertext(const QFrankSSL::ArtDerFehlerquelle &fehlerquelle=QFrankSSL::SSL_Bibliothek)const;
 				bool			K_SSL_Betriebsbereit;
 				bool			K_SSL_VerbindungAufgebaut;
+				bool			K_SSL_Handshake_durchgefuehrt;
+				bool			K_MussWasGesendetWerden();
 				int				K_SSL_Fehlercode;
-				QByteArray		K_Lesepuffer;
+				void			K_DatenSenden();
+				void			K_SSL_Handshake();
 
 #ifndef QT_NO_DEBUG
 			QString				K_FeldNachHex(const QByteArray &feld) const;
