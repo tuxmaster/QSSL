@@ -25,12 +25,16 @@
 static void			QtNachrichten(QtMsgType type, const char *msg);
 static QTextEdit*	Debugausgabe;
 
+class QFrankSSL;
+
 class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 {
 	Q_OBJECT
 	public:
 					QFrankDlgHaupt(QWidget* eltern=0);				
-					~QFrankDlgHaupt();		
+					~QFrankDlgHaupt();
+	private:
+					QFrankSSL*	K_SSL;
 };
 
 #endif

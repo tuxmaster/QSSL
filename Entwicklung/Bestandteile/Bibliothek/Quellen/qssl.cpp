@@ -23,7 +23,7 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 {
 	//Warnung bei DEBUG
 #ifndef QT_NO_DEBUG
-	qWarning("WARNUNG Debugversion wird benutzt.\r\nEs könnten sicherheitsrelevante Daten ausgegeben werden!!!!!");
+	qWarning("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!");
 #endif
 	K_SSL_Betriebsbereit=false;
 	K_SSL_VerbindungAufgebaut=false;

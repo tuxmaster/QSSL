@@ -17,9 +17,10 @@
  *  
  */
 
-#include "DlgHaupt.h"
-
 #include <QtGui>
+
+#include "DlgHaupt.h"
+#include <qssl.h>
 
 QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 {
@@ -28,10 +29,7 @@ QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 	//Qt Nachrichten abfangen
 	Debugausgabe=txtDebug;
 	qInstallMsgHandler(QtNachrichten);
-	qDebug()<<"Normal";
-	qWarning()<<"Warnung";
-	qCritical()<<"extem schlecht";
-	qFatal("nix geht mehr");
+	K_SSL=new QFrankSSL(this);
 }
 
 QFrankDlgHaupt::~QFrankDlgHaupt()
@@ -45,14 +43,22 @@ void QtNachrichten(QtMsgType type, const char *msg)
 	switch(type)
 	{
 		case QtDebugMsg:
-			Debugausgabe->append(QString("<font color=#00ff00>Debug: <font color=black>%1").arg(msg));
+							Debugausgabe->append(QString("<font color=#00ff00>Debug: <font color=black>%1").arg(msg));
 							break;
 		case QtWarningMsg:
-			Debugausgabe->append(QString("<font color=#ffe000>Warnung: <font color=black>%1").arg(msg));
+							if(getenv("QT_FATAL_WARNINGS")==NULL)
+								Debugausgabe->append(QString("<font color=#ffe000>Warnung: <font color=black>%1").arg(msg));
+							else
+								fprintf(stderr,"Warung(mit Fatal Funktion): %s\n", msg);
 							break;
 		case QtCriticalMsg:	
 							Debugausgabe->append(QString("<font color=red>Kritisch: <font color=black>%1").arg(msg));
-							break;		
+							break;
+#ifndef Q_CC_MSVC
+		case QtFatalMsg:
+							fprintf(stderr,"Fatal nix geht mehr: %s\n", msg);
+							abort();
+#endif
 	}
 }
 
