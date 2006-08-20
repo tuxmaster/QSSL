@@ -23,9 +23,11 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 {
 	//Warnung bei DEBUG
 #ifndef QT_NO_DEBUG
-	qWarning("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!");
+	qWarning("WARNUNG Debugversion wird benutzt.\r\nEs koennen sicherheitsrelevante Daten ausgegeben werden!!");
 #endif
-	K_SSL_Betriebsbereit=false;
+	K_KeineSSLStrukturText=trUtf8("SSL Struktur nicht verfügbar.");
+	K_SSLServerNichtGefundenText=tr("Der SSL Server wurde nicht gefunden.");
+	K_SSLServerVerbindungAbgelehntText=tr("Der SSL Server hat die Verbindung abgelehnt");
 	K_SSL_VerbindungAufgebaut=false;
 	K_SSL_Handshake_durchgefuehrt=false;
 	K_TunnelBereit=false;
@@ -56,7 +58,35 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 		QTimer::singleShot(0,this,SLOT(K_FehlertextSenden()));
 		return;
 	}
-	K_SSL_Betriebsbereit=true;
+	K_VerfuegbareAlgorithmenHohlen();	
+	connect(this,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError)));
+	connect(this,SIGNAL(readyRead()),this,SLOT(K_DatenKoennenGelesenWerden()));
+	connect(this,SIGNAL(connected()),this,SLOT(K_MitServerVerbunden()));
+	
+}
+
+QFrankSSL::~QFrankSSL()
+{
+	//OpenSSL aufräumen
+	if(K_SSLStruktur!=NULL)
+		SSL_free(K_SSLStruktur);
+	ERR_free_strings();
+	if(K_OpenSSLVerbindung!=NULL)
+		SSL_CTX_free(K_OpenSSLVerbindung);
+	BIO_free(K_Empfangspuffer);
+	BIO_free(K_Sendepuffer);
+}
+
+void QFrankSSL::K_VerfuegbareAlgorithmenHohlen()
+{
+	if(K_SSLStruktur==NULL)
+	{
+#ifndef QT_NO_DEBUG
+		qWarning()<<"QFrankSSL verfuegbare Algorithmen: keine gueltige SSL Struktur";
+#endif
+		emit SSLFehler(K_KeineSSLStrukturText);
+		return;
+	}
 	const char* Algorithmus=0;
 	int Prioritaet=0;
 	do
@@ -69,19 +99,18 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	}
 	while(true);
 #ifndef QT_NO_DEBUG
-	qDebug()<<"QFrankSSL verfügbare Algorithmen:"<<K_VerfuegbareAlgorithmen.join(":");
+	qDebug()<<"QFrankSSL verfuegbare Algorithmen:"<<K_VerfuegbareAlgorithmen.join(":");
 #endif	
-	connect(this,SIGNAL(readyRead()),this,SLOT(K_DatenKoennenGelesenWerden()));
-	connect(this,SIGNAL(connected()),this,SLOT(K_MitServerVerbunden()));
-	
 }
+
+
 
 void QFrankSSL::DatenSenden(const QByteArray &daten)
 {
 	if(!K_TunnelBereit)
 	{
 #ifndef QT_NO_DEBUG
-		qDebug()<<"QFrankSSL DatenSenden: geht nicht, da Tunnel nicht berit.";
+		qDebug()<<"QFrankSSL DatenSenden: geht nicht, da Tunnel nicht bereit.";
 #endif
 		return;
 	}
@@ -94,7 +123,7 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 {
 	int BytesDa=bytesAvailable();
 #ifndef QT_NO_DEBUG
-	qDebug()<<QString("QFrankSSL: Es können %1 Bytes gelesen werden.").arg(BytesDa);
+	qDebug()<<QString("QFrankSSL: Es koennen %1 Bytes gelesen werden.").arg(BytesDa);
 #endif
 	if(!K_SSL_VerbindungAufgebaut)
 	{
@@ -148,20 +177,33 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 
 void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart)
 {
-	if(!K_SSL_Betriebsbereit)
+	if(K_SSLStruktur==NULL)
+	{
+#ifndef QT_NO_DEBUG
+		qWarning("QFrankSSL VerbindungHerstellen: SSL Struktur nicht bereit");
+#endif
+		emit SSLFehler(K_KeineSSLStrukturText);
 		return;
+	}
+		
 	/*	setzen der zu benutzenden Verschlüsselungsalgorithmen
 		Wichig ist, das die in ansteigener Reihenfolge übergeben werden!!!.
 	*/
 	if(SSL_set_cipher_list(K_SSLStruktur,K_VerfuegbareAlgorithmen.join(":").toAscii().constData())==0)
-		qFatal("QFrankSSL kein gültiger Verschlüsselungsalgorithmus angegeben");
+	{
+#ifndef QT_NO_DEBUG
+		qCritical("QFrankSSL kein gueltiger Verschlüsselungsalgorithmus angegeben");
+#endif
+		K_AllesZuruecksetzen();
+		emit SSLFehler(trUtf8("Gewünschter Verschlüsselungsalgorithmus wird von der aktuellen OpenSSL Bibliothek nicht unerstützt!"));
+	}
 	connectToHost(rechnername,port,betriebsart);
 }
 
 bool QFrankSSL::K_MussWasGesendetWerden()
 {
 #ifndef QT_NO_DEBUG
-	qDebug()<<"QFrankSSL müssen wir Daten senden?";
+	qDebug()<<"QFrankSSL muessen wir Daten senden?";
 #endif
 	//Wieviel daten warten auf  Bearbeitung?? >0 sind welche da
 	int warteneDaten=BIO_ctrl(K_Sendepuffer,BIO_CTRL_PENDING,0,NULL);
@@ -253,16 +295,31 @@ void QFrankSSL::K_FehlertextSenden()
 	emit SSLFehler(K_SSLFehlertext());
 }
 
-QFrankSSL::~QFrankSSL()
+void QFrankSSL::K_AllesZuruecksetzen()
 {
-	//OpenSSL aufräumen
-	if(K_SSLStruktur!=NULL)
-		SSL_free(K_SSLStruktur);
-	ERR_free_strings();
-	if(K_OpenSSLVerbindung!=NULL)
-		SSL_CTX_free(K_OpenSSLVerbindung);
-	BIO_free(K_Empfangspuffer);
-	BIO_free(K_Sendepuffer);
+	K_VerfuegbareAlgorithmenHohlen();
+	if(state()==QAbstractSocket::ConnectedState)
+		disconnectFromHost();
+}
+
+void QFrankSSL::K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fehler)
+{
+	K_AllesZuruecksetzen();
+	switch(fehler)
+	{
+		case QAbstractSocket::HostNotFoundError:
+#ifndef QT_NO_DEBUG
+													qWarning("QFrank SSL Verbindung: SSL Server nicht gefunden");
+#endif
+													emit SSLFehler(K_SSLServerNichtGefundenText);
+													break;
+		case QAbstractSocket::ConnectionRefusedError:
+#ifndef QT_NO_DEBUG
+													qWarning("QFrank SSL Verbindung: SSL Server Verbindung abgelehnt");
+#endif
+													emit SSLFehler(K_SSLServerVerbindungAbgelehntText);
+													break;
+	}
 }
 
 #ifndef QT_NO_DEBUG

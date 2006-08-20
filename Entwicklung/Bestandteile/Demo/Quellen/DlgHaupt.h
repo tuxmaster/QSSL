@@ -22,8 +22,8 @@
 
 #include "ui_DemoBasis.h"
 
-static void			QtNachrichten(QtMsgType type, const char *msg);
-static QTextEdit*	Debugausgabe;
+static void						QtNachrichten(QtMsgType type, const char *msg);
+static QTextEdit*				Debugausgabe;
 
 class QFrankSSL;
 
@@ -35,6 +35,12 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 					~QFrankDlgHaupt();
 	private:
 					QFrankSSL*	K_SSL;
+					bool		K_VerbindenTrennen;
+
+	private slots:
+					void		on_cbVerschluesselungFestlegen_stateChanged(int zustand);
+					void		on_sfVerbinden_released();
+					void		K_EsGabEinFehler(const QString & fehlertext);
 };
 
 #endif

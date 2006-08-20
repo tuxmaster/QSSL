@@ -24,18 +24,59 @@
 
 QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 {
+	K_VerbindenTrennen=true;
 	setWindowFlags(windowFlags()^Qt::WindowContextHelpButtonHint);
 	setupUi(this);
 	//Qt Nachrichten abfangen
 	Debugausgabe=txtDebug;
 	qInstallMsgHandler(QtNachrichten);
 	K_SSL=new QFrankSSL(this);
+	connect(K_SSL,SIGNAL(SSLFehler(const QString)),this,SLOT(K_EsGabEinFehler(const QString&)));
 }
 
 QFrankDlgHaupt::~QFrankDlgHaupt()
 {
 	//Qt übernimmt wieder
 	qInstallMsgHandler(0);
+}
+
+void QFrankDlgHaupt::on_cbVerschluesselungFestlegen_stateChanged(int zustand)
+{
+	if(zustand==Qt::Checked)
+	{
+		txtVerschluesselungen->setEnabled(true);
+	}
+	else
+	{
+		txtVerschluesselungen->setEnabled(false);
+	}
+}
+
+void QFrankDlgHaupt::on_sfVerbinden_released()
+{
+	if(K_VerbindenTrennen)
+	{
+		//Verbinden mit SSL Server
+		sfVerbinden->setText("Trennen");
+		sfVerbinden->setEnabled(false);
+		K_VerbindenTrennen=false;
+		if(cbVerschluesselungFestlegen->checkState()==Qt::Checked)
+			K_SSL->VerfuegbareAlgorithmenFestlegen(txtVerschluesselungen->text().split(":"));	
+		K_SSL->VerbindungHerstellen(txtServer->text(),intPort->value());
+	}
+	else
+	{
+		//Trennen vom SSL Server
+		sfVerbinden->setText("Verbinden");
+		K_VerbindenTrennen=true;
+	}
+}
+
+void QFrankDlgHaupt::K_EsGabEinFehler(const QString & fehlertext)
+{
+	txtFehler->append(fehlertext);
+	on_sfVerbinden_released();
+	sfVerbinden->setEnabled(true);
 }
 
 void QtNachrichten(QtMsgType type, const char *msg)
@@ -61,4 +102,3 @@ void QtNachrichten(QtMsgType type, const char *msg)
 #endif
 	}
 }
-

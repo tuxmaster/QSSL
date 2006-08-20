@@ -59,14 +59,21 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void				DatenSenden(const QByteArray &daten);
 
 	signals:
-				void				SSLFehler(const QString fehlertext)const;
+				void				SSLFehler(const QString &fehlertext)const;
 				void				DatenBereitZumAbhohlen(const QByteArray &daten)const;
 				void				TunnelBereit()const;
-				
+	
+	private slots:
+
+				void				K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fehler);	
+
 	private:
 				enum				Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
 				enum				StatusDerVerbidnung{VERBINDEN=0x00,HANDSCHLAG=0x01,VERBUNDEN=0x02};
 				Q_DECLARE_FLAGS(ArtDerFehlerquelle,Fehlerquelle)
+				QString				K_KeineSSLStrukturText;
+				QString				K_SSLServerNichtGefundenText;
+				QString				K_SSLServerVerbindungAbgelehntText;
 				SSL_CTX*			K_OpenSSLVerbindung;
 				SSL*				K_SSLStruktur;
 				BIO*				K_Empfangspuffer;
@@ -80,16 +87,18 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				int					K_SSL_Fehlercode;
 				void				K_DatenSenden();
 				void				K_SSL_Handshake();
+				void				K_VerfuegbareAlgorithmenHohlen();
+				void				K_AllesZuruecksetzen();
 				QByteArray			K_EmpfangenenDaten;
 				QStringList			K_VerfuegbareAlgorithmen;
 
 #ifndef QT_NO_DEBUG
-			QString				K_FeldNachHex(const QByteArray &feld) const;
+			QString					K_FeldNachHex(const QByteArray &feld) const;
 #endif
 				
 	private slots:
-				void			K_FehlertextSenden();
-				void			K_MitServerVerbunden();
-				void			K_DatenKoennenGelesenWerden();
+				void				K_FehlertextSenden();
+				void				K_MitServerVerbunden();
+				void				K_DatenKoennenGelesenWerden();
 };
 #endif
