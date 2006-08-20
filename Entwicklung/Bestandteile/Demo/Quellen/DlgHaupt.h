@@ -40,7 +40,12 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 	private slots:
 					void		on_cbVerschluesselungFestlegen_stateChanged(int zustand);
 					void		on_sfVerbinden_released();
+					void		on_txtDebug_textChanged();
+					void		on_txtFehler_textChanged();
+					void		on_txtEmpfangen_textChanged();
 					void		K_EsGabEinFehler(const QString & fehlertext);
+					void		K_DatenSindDa(const QByteArray &daten);
+					void		K_TunnelAufgebaut();
 };
 
 #endif

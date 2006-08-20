@@ -53,8 +53,10 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				QFrankSSL(QObject* eltern);
 				~QFrankSSL();
 				void				VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart=QIODevice::ReadWrite);
-				const QStringList	VerfuegbareAlgorithmen()const{return K_VerfuegbareAlgorithmen;}
 				void				VerfuegbareAlgorithmenFestlegen(const QStringList &welche){K_VerfuegbareAlgorithmen=welche;}
+				void				VerbindungTrennen();
+				const QStringList&	VerfuegbareAlgorithmen()const{return K_VerfuegbareAlgorithmen;}
+
 	public slots:
 				void				DatenSenden(const QByteArray &daten);
 
@@ -71,10 +73,14 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				enum				Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
 				enum				StatusDerVerbidnung{VERBINDEN=0x00,HANDSCHLAG=0x01,VERBUNDEN=0x02};
 				Q_DECLARE_FLAGS(ArtDerFehlerquelle,Fehlerquelle)
+				QString				K_KeineOpenSSLStrukturText;
 				QString				K_KeineSSLStrukturText;
 				QString				K_SSLServerNichtGefundenText;
 				QString				K_SSLServerVerbindungAbgelehntText;
-				SSL_CTX*			K_OpenSSLVerbindung;
+				QString				K_SSLServerVerbindungVomServerGetrenntText;
+				QString				K_SSLStrukturKonnteNichtErzeugtWerdenText;
+				QString				K_OpenSSLFehlerText;
+				SSL_CTX*			K_OpenSSLStruktur;
 				SSL*				K_SSLStruktur;
 				BIO*				K_Empfangspuffer;
 				BIO*				K_Sendepuffer;
@@ -83,12 +89,13 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				bool				K_SSL_VerbindungAufgebaut;
 				bool				K_SSL_Handshake_durchgefuehrt;
 				bool				K_TunnelBereit;
-				bool				K_MussWasGesendetWerden();
+				const bool			K_MussWasGesendetWerden();
+				const bool			K_SSLStrukturAufbauen();
 				int					K_SSL_Fehlercode;
 				void				K_DatenSenden();
 				void				K_SSL_Handshake();
 				void				K_VerfuegbareAlgorithmenHohlen();
-				void				K_AllesZuruecksetzen();
+				void				K_AllesZuruecksetzen(const bool &auchAlgorithmenliste=true);
 				QByteArray			K_EmpfangenenDaten;
 				QStringList			K_VerfuegbareAlgorithmen;
 

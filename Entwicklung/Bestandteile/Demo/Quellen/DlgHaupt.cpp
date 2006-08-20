@@ -32,6 +32,8 @@ QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 	qInstallMsgHandler(QtNachrichten);
 	K_SSL=new QFrankSSL(this);
 	connect(K_SSL,SIGNAL(SSLFehler(const QString)),this,SLOT(K_EsGabEinFehler(const QString&)));
+	connect(K_SSL,SIGNAL(DatenBereitZumAbhohlen(const QByteArray&)),this,SLOT(K_DatenSindDa(const QByteArray&)));
+	connect(K_SSL,SIGNAL(TunnelBereit()),this,SLOT(K_TunnelAufgebaut()));
 }
 
 QFrankDlgHaupt::~QFrankDlgHaupt()
@@ -68,6 +70,8 @@ void QFrankDlgHaupt::on_sfVerbinden_released()
 	{
 		//Trennen vom SSL Server
 		sfVerbinden->setText("Verbinden");
+		txtSenden->setEnabled(false);
+		K_SSL->VerbindungTrennen();
 		K_VerbindenTrennen=true;
 	}
 }
@@ -77,6 +81,32 @@ void QFrankDlgHaupt::K_EsGabEinFehler(const QString & fehlertext)
 	txtFehler->append(fehlertext);
 	on_sfVerbinden_released();
 	sfVerbinden->setEnabled(true);
+}
+
+void QFrankDlgHaupt::K_TunnelAufgebaut()
+{
+	txtSenden->setEnabled(true);
+	sfVerbinden->setEnabled(true);
+}
+
+void QFrankDlgHaupt::K_DatenSindDa(const QByteArray &daten)
+{
+	txtEmpfangen->append(daten);
+}
+
+void QFrankDlgHaupt::on_txtDebug_textChanged()
+{
+	txtDebug->verticalScrollBar()->setSliderPosition(txtDebug->verticalScrollBar()->maximum());
+}
+
+void QFrankDlgHaupt::on_txtFehler_textChanged()
+{
+	txtFehler->verticalScrollBar()->setSliderPosition(txtFehler->verticalScrollBar()->maximum());
+}
+
+void QFrankDlgHaupt::on_txtEmpfangen_textChanged()
+{
+	txtEmpfangen->verticalScrollBar()->setSliderPosition(txtEmpfangen->verticalScrollBar()->maximum());
 }
 
 void QtNachrichten(QtMsgType type, const char *msg)
