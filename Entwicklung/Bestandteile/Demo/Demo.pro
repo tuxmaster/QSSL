@@ -18,8 +18,13 @@ PROJEKTTEIL	= Demo
 TEMPLATE	= app
 include (../../Vorgaben.pri)
 TARGET		= demo
-win32:CONFIG	+= console
+QT			+= gui
 LIBS		+= -lqssl -L$$DESTDIR
 INCLUDEPATH	+= ../Bibliothek/Quellen
 
-SOURCES		= Quellen/demo.cpp
+FORMS		= Dialoge/DemoBasis.ui
+
+HEADERS		= Quellen/DlgHaupt.h
+
+SOURCES		= Quellen/DlgHaupt.cpp\
+			  Quellen/demo.cpp

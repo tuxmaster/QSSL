@@ -17,16 +17,23 @@
  *  
  */
 
-#include <QtCore>
-#include <qssl.h>
+#include <QtGui>
+#include "DlgHaupt.h"
 
 int main(int argc, char *argv[])
 {
-	QCoreApplication Programm(argc,argv);
-	QFrankSSL Verbindung(&Programm);
-	qDebug()<<"Wir haben folgeden Verschlüsselungsverfahren zur Auswahl:"<<Verbindung.VerfuegbareAlgorithmen().join(":");
-	Verbindung.VerfuegbareAlgorithmenFestlegen(QString("DHE-RSA-AES256-SHA:EDH-RSA-DES-CBC3-SHA").split(":"));
-	Verbindung.VerbindungHerstellen("localhost",1234);
+	QApplication Programm(argc,argv);
+	//Übersetzungen für das Qt System laden.
+	QTranslator QtSystem;
+	// Ein Gruss an die Doku von Qt 4.1
+	QtSystem.load("qt_" + QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+	Programm.installTranslator(&QtSystem);
+	QFrankDlgHaupt Hauptformular;
+	Hauptformular.show();
+	//QFrankSSL Verbindung(&Programm);
+	//qDebug()<<"Wir haben folgeden Verschlüsselungsverfahren zur Auswahl:"<<Verbindung.VerfuegbareAlgorithmen().join(":");
+	//Verbindung.VerfuegbareAlgorithmenFestlegen(QString("DHE-RSA-AES256-SHA:EDH-RSA-DES-CBC3-SHA").split(":"));
+	//Verbindung.VerbindungHerstellen("localhost",1234);
 	//Verbindung.VerbindungHerstellen("192.168.0.2",1234);
 	return Programm.exec();
 }
