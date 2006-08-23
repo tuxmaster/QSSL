@@ -95,7 +95,7 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void				K_DatenSenden();
 				void				K_SSL_Handshake();
 				void				K_VerfuegbareAlgorithmenHohlen();
-				void				K_AllesZuruecksetzen(const bool &auchAlgorithmenliste=true);
+				void				K_AllesZuruecksetzen();
 				QByteArray			K_EmpfangenenDaten;
 				QStringList			K_VerfuegbareAlgorithmen;
 

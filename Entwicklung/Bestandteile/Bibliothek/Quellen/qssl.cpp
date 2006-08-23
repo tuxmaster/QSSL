@@ -52,18 +52,6 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 		QTimer::singleShot(0,this,SLOT(K_FehlertextSenden()));
 		return;
 	}
-	/*
-	K_SSLStruktur=SSL_new(K_OpenSSLStruktur);
-	if(K_SSLStruktur==NULL)
-	{
-#ifndef QT_NO_DEBUG
-		qDebug("QFrankSSL SSL Struktur konnte nicht erstellt werden.");
-		qDebug()<<K_SSLFehlertext();
-#endif
-		QTimer::singleShot(0,this,SLOT(K_FehlertextSenden()));
-		return;
-	}
-	K_VerfuegbareAlgorithmenHohlen();*/	
 	connect(this,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError)));
 	connect(this,SIGNAL(readyRead()),this,SLOT(K_DatenKoennenGelesenWerden()));
 	connect(this,SIGNAL(connected()),this,SLOT(K_MitServerVerbunden()));
@@ -100,10 +88,10 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 	{
 		K_OpenSSLFehlerText=K_KeineOpenSSLStrukturText+K_SSLFehlertext();
 #ifndef QT_NO_DEBUG
-		qCritical("QFrankSSL SSL Struktur aufbauen: OpenSSL Sturktur fehlt");
+		qCritical("QFrankSSL SSL Struktur aufbauen: OpenSSL Struktur fehlt");
 		qCritical(K_SSLFehlertext().toAscii().data());
 #endif
-		K_AllesZuruecksetzen(false);
+		K_AllesZuruecksetzen();
 		return false;
 	}
 	K_SSLStruktur=SSL_new(K_OpenSSLStruktur);
@@ -114,13 +102,15 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 		qWarning("QFrankSSL SSL Struktur aufbauen: fehlgeschlagen");
 		qWarning()<<K_OpenSSLFehlerText;
 #endif
-		K_AllesZuruecksetzen(false);
+		K_AllesZuruecksetzen();
 		return false;
 	}
 #ifndef QT_NO_DEBUG
 	qDebug()<<"QFrankSSL SSL Struktur aufbauen: erfolgreich";
 #endif
-	K_VerfuegbareAlgorithmenHohlen();
+	//Nur hohlen, wenn die Liste leer ist, da sonst die Nutzervorgaben überschrieben werden.
+	if(K_VerfuegbareAlgorithmen.isEmpty())
+		K_VerfuegbareAlgorithmenHohlen();
 	return true;
 }
 
@@ -244,7 +234,10 @@ void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &p
 		qCritical("QFrankSSL kein gueltiger Verschlüsselungsalgorithmus angegeben");
 #endif
 		K_AllesZuruecksetzen();
+		//Liste löschen, da eh ungültig
+		K_VerfuegbareAlgorithmen.clear();
 		emit SSLFehler(trUtf8("Gewünschter Verschlüsselungsalgorithmus wird von der aktuellen OpenSSL Bibliothek nicht unerstützt!"));
+		return;
 	}
 	connectToHost(rechnername,port,betriebsart);
 }
@@ -306,18 +299,20 @@ void QFrankSSL::K_SSL_Handshake()
 
 void QFrankSSL::K_MitServerVerbunden()
 {
-	if(!K_SSLStrukturAufbauen())
+	if(K_SSLStruktur==NULL)
 	{
 #ifndef QT_NO_DEBUG
 		qWarning("QFrankSSL Verbindung mit dem Server hergestellt: Keine SSL Strukur");
 #endif
-		emit SSLFehler(K_KeineSSLStrukturText+K_OpenSSLFehlerText);
+		K_AllesZuruecksetzen();
+		emit SSLFehler(K_KeineSSLStrukturText);
 		return;
 	}	
 #ifndef QT_NO_DEBUG
 	qDebug("QFrankSSL Verbindung mit dem Server hergestellt. Baue OpenSSL auf");
 #endif
 	K_SSL_VerbindungAufgebaut=true;
+	
 	SSL_set_bio(K_SSLStruktur, K_Empfangspuffer, K_Sendepuffer);
 	SSL_set_connect_state(K_SSLStruktur);
 
@@ -358,16 +353,15 @@ void QFrankSSL::VerbindungTrennen()
 			K_DatenSenden();
 }
 
-void QFrankSSL::K_AllesZuruecksetzen(const bool &auchAlgorithmenliste)
-{
-	if(auchAlgorithmenliste)
-		K_VerfuegbareAlgorithmenHohlen();
+void QFrankSSL::K_AllesZuruecksetzen()
+{	
 	if(state()==QAbstractSocket::ConnectedState)
 		disconnectFromHost();
 	//SSL Struktur löschen
 	if(K_SSLStruktur!=NULL)
 		SSL_free(K_SSLStruktur);
 	K_SSLStruktur=NULL;
+
 }
 
 void QFrankSSL::K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fehler)
