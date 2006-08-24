@@ -142,19 +142,7 @@ void QFrankSSL::K_VerfuegbareAlgorithmenHohlen()
 
 
 
-void QFrankSSL::DatenSenden(const QByteArray &daten)
-{
-	if(!K_TunnelBereit)
-	{
-#ifndef QT_NO_DEBUG
-		qDebug()<<"QFrankSSL DatenSenden: geht nicht, da Tunnel nicht bereit.";
-#endif
-		return;
-	}
-	SSL_write(K_SSLStruktur,daten.data(),daten.size());
-	if(K_MussWasGesendetWerden())
-		K_DatenSenden();
-}
+
 
 void QFrankSSL::K_DatenKoennenGelesenWerden()
 {
@@ -228,6 +216,11 @@ void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &p
 	/*	setzen der zu benutzenden Verschlüsselungsalgorithmen
 		Wichig ist, das die in ansteigener Reihenfolge übergeben werden!!!.
 	*/
+	if(K_OpenSSLMitBugs())
+	{
+		K_AllesZuruecksetzen();
+		return;
+	}
 	if(SSL_set_cipher_list(K_SSLStruktur,K_VerfuegbareAlgorithmen.join(":").toAscii().constData())==0)
 	{
 #ifndef QT_NO_DEBUG
@@ -260,6 +253,25 @@ const bool QFrankSSL::K_MussWasGesendetWerden()
 	qDebug()<<"\tnein";
 #endif
 	return false;
+}
+
+void QFrankSSL::DatenSenden(const QByteArray &daten)
+{
+	if(!K_TunnelBereit)
+	{
+#ifndef QT_NO_DEBUG
+		qWarning()<<"QFrankSSL Daten Senden: geht nicht, da Tunnel nicht bereit.";
+#endif
+		K_AllesZuruecksetzen();
+		emit SSLFehler(tr("Der SSL Tunnel ist nicht aufgebaut."));
+		return;
+	}
+#ifndef QT_NO_DEBUG
+	qDebug()<<"QFrankSSL Daten Senden Daten:"<<K_FeldNachHex(daten);
+#endif
+	SSL_write(K_SSLStruktur,daten.data(),daten.size());
+	if(K_MussWasGesendetWerden())
+		K_DatenSenden();
 }
 
 void QFrankSSL::K_DatenSenden()
@@ -362,6 +374,25 @@ void QFrankSSL::K_AllesZuruecksetzen()
 		SSL_free(K_SSLStruktur);
 	K_SSLStruktur=NULL;
 
+}
+
+const bool QFrankSSL::K_OpenSSLMitBugs()const
+{
+	/*	Version 0.9.7c hat ein Bug in der Funktion
+		SSL_set_cipher_list() es wird immer 1 geliefert.
+		Egal ob der Algorithmus gültig ist oder nicht.
+	*/
+	//qDebug("0x%X",SSLeay());
+	if(SSLeay()==0x00090703f)
+	{
+#ifndef QT_NO_DEBUG
+		qCritical("QFrankSSL Bugpruefung: 0.9.7c gefunden!!!");
+#endif
+		emit SSLFehler(trUtf8("Die installierte OpenSSL Version: %1 enthält Bugs.\r\nWeitere Hinweise entnehmen Sie bitte der Datei Hinweise.txt")
+								.arg(SSLeay_version(SSLEAY_VERSION)));
+		return true;
+	}
+	return false;
 }
 
 void QFrankSSL::K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fehler)

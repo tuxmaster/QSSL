@@ -43,6 +43,7 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 					void		on_txtDebug_textChanged();
 					void		on_txtFehler_textChanged();
 					void		on_txtEmpfangen_textChanged();
+					void		on_txtSenden_returnPressed();
 					void		K_EsGabEinFehler(const QString & fehlertext);
 					void		K_DatenSindDa(const QByteArray &daten);
 					void		K_TunnelAufgebaut();

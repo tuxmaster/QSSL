@@ -91,6 +91,7 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				bool				K_TunnelBereit;
 				const bool			K_MussWasGesendetWerden();
 				const bool			K_SSLStrukturAufbauen();
+				const bool			K_OpenSSLMitBugs()const;
 				int					K_SSL_Fehlercode;
 				void				K_DatenSenden();
 				void				K_SSL_Handshake();

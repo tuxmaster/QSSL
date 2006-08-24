@@ -71,7 +71,7 @@ void QFrankDlgHaupt::on_sfVerbinden_released()
 		//Trennen vom SSL Server
 		sfVerbinden->setText("Verbinden");
 		txtSenden->setEnabled(false);
-		K_SSL->VerbindungTrennen();
+		//K_SSL->VerbindungTrennen();
 		K_VerbindenTrennen=true;
 	}
 }
@@ -86,12 +86,19 @@ void QFrankDlgHaupt::K_EsGabEinFehler(const QString & fehlertext)
 void QFrankDlgHaupt::K_TunnelAufgebaut()
 {
 	txtSenden->setEnabled(true);
+	txtSenden->setFocus();
 	sfVerbinden->setEnabled(true);
+
 }
 
 void QFrankDlgHaupt::K_DatenSindDa(const QByteArray &daten)
 {
 	txtEmpfangen->append(daten);
+}
+
+void QFrankDlgHaupt::on_txtSenden_returnPressed()
+{
+	K_SSL->DatenSenden(txtSenden->text().toUtf8());
 }
 
 void QFrankDlgHaupt::on_txtDebug_textChanged()
