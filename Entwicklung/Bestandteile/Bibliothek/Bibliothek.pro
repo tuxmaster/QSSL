@@ -32,5 +32,7 @@ unix{
 }
 
 
-HEADERS		= Quellen/qssl.h
-SOURCES		= Quellen/qssl.cpp 
+HEADERS		= Quellen/Zertifikatsspeicher.h\ 
+			  Quellen/qssl.h
+SOURCES		= Quellen/Zertifikatsspeicher.cpp\
+			  Quellen/qssl.cpp 

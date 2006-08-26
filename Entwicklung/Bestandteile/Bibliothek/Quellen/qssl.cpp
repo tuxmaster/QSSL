@@ -18,6 +18,7 @@
  */
 
 #include "qssl.h"
+#include "Zertifikatsspeicher.h"
 
 QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 {
@@ -25,6 +26,9 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 #ifndef QT_NO_DEBUG
 	qWarning("WARNUNG Debugversion wird benutzt.\r\nEs koennen sicherheitsrelevante Daten ausgegeben werden!!");
 #endif
+	//Der 1. erstellt den Zertifikatsspeicher
+	if(K_Zertifikatspeicher==0)
+		K_Zertifikatspeicher=new QFrankSSLZertifikatspeicher(QCoreApplication::instance());
 	K_KeineOpenSSLStrukturText=trUtf8("OpenSSL Struktur nicht verfügbar\r\n");
 	K_KeineSSLStrukturText=trUtf8("SSL Struktur nicht verfügbar\r\n");
 	K_SSLServerNichtGefundenText=tr("Der SSL Server wurde nicht gefunden.");
@@ -423,6 +427,8 @@ void QFrankSSL::K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fe
 													break;
 	}
 }
+
+QFrankSSLZertifikatspeicher* QFrankSSL::K_Zertifikatspeicher=0;
 
 #ifndef QT_NO_DEBUG
 QString QFrankSSL::K_FeldNachHex(const QByteArray &feld) const
