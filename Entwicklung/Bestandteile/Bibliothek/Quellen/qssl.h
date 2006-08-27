@@ -23,30 +23,20 @@
 #include <QtNetwork>
 
 //Unter Windows  braucht man Hilfe beim Exportieren
-#ifdef BIBLIOTHEK_BAUEN
-	#ifdef Q_WS_WIN
-		#define DLL_BAUEN
-	#endif
-//Open SSL Header
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#else
-	class SSL_CTX;
-	class SSL;
-	class BIO;
-#endif
-
 #ifdef Q_WS_WIN 
 	#ifdef DLL_BAUEN
 		#define DLL_EXPORT __declspec(dllexport)
 	#else
-			#define DLL_EXPORT __declspec(dllimport)
+		#define DLL_EXPORT __declspec(dllimport)
 	#endif
 #else
 		#define DLL_EXPORT
 #endif
 
 class QFrankSSLZertifikatspeicher;
+typedef struct ssl_st SSL;
+typedef struct ssl_ctx_st SSL_CTX;
+typedef struct bio_st BIO;
 
 class DLL_EXPORT QFrankSSL: public QTcpSocket
 {
@@ -73,8 +63,9 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 
 	private:
 				enum								Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
-				enum								StatusDerVerbidnung{VERBINDEN=0x00,HANDSCHLAG=0x01,VERBUNDEN=0x02};
+				enum								StatusDerVerbidnung{HANDSCHLAG=0x02,VERBUNDEN=0x03,VERBINDEN=0x04,GETRENNT=0x05,TRENNEN=0x06};
 				Q_DECLARE_FLAGS(ArtDerFehlerquelle,Fehlerquelle)
+				Q_DECLARE_FLAGS(Verbindungsstatus,StatusDerVerbidnung)
 				QString								K_KeineOpenSSLStrukturText;
 				QString								K_KeineSSLStrukturText;
 				QString								K_SSLServerNichtGefundenText;
@@ -87,10 +78,6 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				BIO*								K_Empfangspuffer;
 				BIO*								K_Sendepuffer;
 				const QString						K_SSLFehlertext(const QFrankSSL::ArtDerFehlerquelle &fehlerquelle=QFrankSSL::SSL_Bibliothek)const;
-				bool								K_SSL_Betriebsbereit;
-				bool								K_SSL_VerbindungAufgebaut;
-				bool								K_SSL_Handshake_durchgefuehrt;
-				bool								K_TunnelBereit;
 				const bool							K_MussWasGesendetWerden();
 				const bool							K_SSLStrukturAufbauen();
 				const bool							K_OpenSSLMitBugs()const;
@@ -102,6 +89,7 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				QByteArray							K_EmpfangenenDaten;
 				QStringList							K_VerfuegbareAlgorithmen;
 				static QFrankSSLZertifikatspeicher*	K_Zertifikatspeicher;
+				QFrankSSL::Verbindungsstatus		K_Verbindungsstatus;
 
 #ifndef QT_NO_DEBUG
 			QString									K_FeldNachHex(const QByteArray &feld) const;

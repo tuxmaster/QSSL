@@ -20,6 +20,10 @@
 #include "qssl.h"
 #include "Zertifikatsspeicher.h"
 
+//Open SSL Header
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 {
 	//Warnung bei DEBUG
@@ -35,9 +39,7 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	K_SSLServerVerbindungAbgelehntText=tr("Der SSL Server hat die Verbindung abgelehnt");
 	K_SSLServerVerbindungVomServerGetrenntText=tr("Der SSL Server hat die Verbindung getrennt.");
 	K_SSLStrukturKonnteNichtErzeugtWerdenText=tr("Die SSL Struktur konnte nicht erzeugt weden.\r\n");
-	K_SSL_VerbindungAufgebaut=false;
-	K_SSL_Handshake_durchgefuehrt=false;
-	K_TunnelBereit=false;
+	K_Verbindungsstatus=QFrankSSL::GETRENNT;
 	K_OpenSSLStruktur=NULL;
 	K_SSLStruktur=NULL;
 	//OpenSSL initialisieren
@@ -154,7 +156,7 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 #ifndef QT_NO_DEBUG
 	qDebug()<<QString("QFrankSSL: Es koennen %1 Bytes gelesen werden.").arg(BytesDa);
 #endif
-	if(!K_SSL_VerbindungAufgebaut)
+	if(K_Verbindungsstatus==QFrankSSL::GETRENNT)
 	{
 #ifndef QT_NO_DEBUG
 		qDebug()<<"\tAber es besteht keine Verbindung zum SSL Server:(";
@@ -173,34 +175,38 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 	//müssen wir senden??
 	if(K_MussWasGesendetWerden())
 		K_DatenSenden();
-	//schauen wir mal ob wir daten haben
-	K_EmpfangenenDaten.resize(BytesDa);
-	K_SSL_Fehlercode=SSL_read(K_SSLStruktur,K_EmpfangenenDaten.data(),BytesDa);
-	if(K_SSL_Fehlercode>0)
+	switch(K_Verbindungsstatus)
 	{
+		case QFrankSSL::VERBUNDEN:
+									K_EmpfangenenDaten.resize(BytesDa);
+									K_SSL_Fehlercode=SSL_read(K_SSLStruktur,K_EmpfangenenDaten.data(),BytesDa);
+									if(K_SSL_Fehlercode>0)
+									{
 #ifndef QT_NO_DEBUG
-		qDebug()<<"QFrankSSL: Daten empfangen";
+										qDebug()<<"QFrankSSL: Daten empfangen";
 #endif
-		if(K_SSL_Fehlercode<BytesDa)
-			K_EmpfangenenDaten.resize(K_SSL_Fehlercode);
-		emit DatenBereitZumAbhohlen(K_EmpfangenenDaten);
+										if(K_SSL_Fehlercode<BytesDa)
+											K_EmpfangenenDaten.resize(K_SSL_Fehlercode);
+										emit DatenBereitZumAbhohlen(K_EmpfangenenDaten);
 #ifndef QT_NO_DEBUG
-		qDebug()<<"QFrankSSL: Daten:"<<K_FeldNachHex(K_EmpfangenenDaten);
-		SSL_write(K_SSLStruktur,K_EmpfangenenDaten.data(),K_EmpfangenenDaten.size());
-		if(K_MussWasGesendetWerden())
-			K_DatenSenden();
+										qDebug()<<"QFrankSSL: Daten:"<<K_FeldNachHex(K_EmpfangenenDaten);
 #endif
-		
+									}
+									if(K_SSL_Fehlercode<0)
+									{
+										K_SSL_Fehlercode=SSL_get_error(K_SSLStruktur,K_SSL_Fehlercode);
+#ifndef QT_NO_DEBUG
+										qDebug()<<"\tSSL_Error ergab:"<<K_SSL_Fehlercode;
+#endif									
+									}
+									break;
+		case QFrankSSL::VERBINDEN:
+									//Wenn die Verbindung mit dem SSL Server steht, Handschlag durchführen
+									qDebug(SSL_state_string(K_SSLStruktur));
+									qFatal("Hier gehts weiter wenn ich die Doku habe.");
+									//K_SSL_Handshake();
+									break;
 	}
-	if(K_SSL_Fehlercode<0)
-	{
-			K_SSL_Fehlercode=SSL_get_error(K_SSLStruktur,K_SSL_Fehlercode);
-#ifndef QT_NO_DEBUG
-			qDebug()<<"\tSSL_Error ergab:"<<K_SSL_Fehlercode;
-#endif
-	}
-	if(!K_SSL_Handshake_durchgefuehrt)
-		K_SSL_Handshake();
 	
 }
 
@@ -236,6 +242,7 @@ void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &p
 		emit SSLFehler(trUtf8("Gewünschter Verschlüsselungsalgorithmus wird von der aktuellen OpenSSL Bibliothek nicht unerstützt!"));
 		return;
 	}
+	
 	connectToHost(rechnername,port,betriebsart);
 }
 
@@ -261,7 +268,7 @@ const bool QFrankSSL::K_MussWasGesendetWerden()
 
 void QFrankSSL::DatenSenden(const QByteArray &daten)
 {
-	if(!K_TunnelBereit)
+	if(K_Verbindungsstatus!=QFrankSSL::VERBUNDEN)
 	{
 #ifndef QT_NO_DEBUG
 		qWarning()<<"QFrankSSL Daten Senden: geht nicht, da Tunnel nicht bereit.";
@@ -304,12 +311,10 @@ void QFrankSSL::K_SSL_Handshake()
 #endif
 	if(K_SSLStruktur>0)
 	{
-		K_SSL_Handshake_durchgefuehrt=true;
+		K_Verbindungsstatus=QFrankSSL::HANDSCHLAG;
 		SSL_do_handshake(K_SSLStruktur);
 		if(K_MussWasGesendetWerden())
-			K_DatenSenden();
-		K_TunnelBereit=true;
-		emit TunnelBereit();
+			K_DatenSenden();		
 	}
 }
 
@@ -327,11 +332,9 @@ void QFrankSSL::K_MitServerVerbunden()
 #ifndef QT_NO_DEBUG
 	qDebug("QFrankSSL Verbindung mit dem Server hergestellt. Baue OpenSSL auf");
 #endif
-	K_SSL_VerbindungAufgebaut=true;
-	
 	SSL_set_bio(K_SSLStruktur, K_Empfangspuffer, K_Sendepuffer);
 	SSL_set_connect_state(K_SSLStruktur);
-
+	K_Verbindungsstatus=QFrankSSL::VERBINDEN;
 	// SSL Verbindung erstellen
 	SSL_connect(K_SSLStruktur);
 	if(K_MussWasGesendetWerden())

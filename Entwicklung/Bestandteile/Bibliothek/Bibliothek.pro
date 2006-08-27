@@ -20,9 +20,8 @@ CONFIG		+= dll
 include (../../Vorgaben.pri)
 VERSION		= 0.1.0
 TARGET		= qssl
-DEFINES		+= BIBLIOTHEK_BAUEN
-
 win32{
+	DEFINES		+= DLL_BAUEN	
 	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8b-Debug/include
 	LIBS		+= -L../../../../../OpenSSL/0.9.8b-Debug/lib -lssleay32 -llibeay32
 }
