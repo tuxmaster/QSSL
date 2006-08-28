@@ -23,7 +23,7 @@ QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObjec
 {
 	//Warnung bei Debug
 #ifndef QT_NO_DEBUG
-	qWarning("WARNUNG Debugversion wird benutzt.\r\nEs koennen sicherheitsrelevante Daten ausgegeben werden!!");
+	qWarning(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!").toLatin1().constData());
 #endif
 	QSettings EinstellungenSystem(QSettings::IniFormat,QSettings::SystemScope,"QSSL","tmp");
 	QSettings EinstellungenNutzer(QSettings::IniFormat,QSettings::UserScope,"QSSL","tmp");

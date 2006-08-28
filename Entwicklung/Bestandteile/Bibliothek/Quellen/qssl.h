@@ -42,11 +42,16 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 {
 	Q_OBJECT
 	public:
+				enum								ArtDerSSLVerbindung{SSLv2=0x01,SSLv3=0x02,TLSv1=0x04};
+				Q_DECLARE_FLAGS(SSLVersion,ArtDerSSLVerbindung);
+
 				QFrankSSL(QObject* eltern);
 				~QFrankSSL();
 				void								VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart=QIODevice::ReadWrite);
 				void								VerfuegbareAlgorithmenFestlegen(const QStringList &welche){K_VerfuegbareAlgorithmen=welche;}
 				void								VerbindungTrennen();
+				void								SSLVersionenFestlegen(const QFrankSSL::SSLVersion &sslVersion){K_ZuBenutzendeSSLVersionen=sslVersion;}
+				const QFrankSSL::SSLVersion&		SSLVersionen()const{return K_ZuBenutzendeSSLVersionen;}
 				const QStringList&					VerfuegbareAlgorithmen()const{return K_VerfuegbareAlgorithmen;}
 
 	public slots:
@@ -90,6 +95,7 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				QStringList							K_VerfuegbareAlgorithmen;
 				static QFrankSSLZertifikatspeicher*	K_Zertifikatspeicher;
 				QFrankSSL::Verbindungsstatus		K_Verbindungsstatus;
+				QFrankSSL::SSLVersion				K_ZuBenutzendeSSLVersionen;
 
 #ifndef QT_NO_DEBUG
 			QString									K_FeldNachHex(const QByteArray &feld) const;
@@ -100,4 +106,5 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void								K_MitServerVerbunden();
 				void								K_DatenKoennenGelesenWerden();
 };
+Q_DECLARE_OPERATORS_FOR_FLAGS(QFrankSSL::SSLVersion)
 #endif

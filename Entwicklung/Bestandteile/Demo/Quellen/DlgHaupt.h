@@ -36,14 +36,19 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 	private:
 					QFrankSSL*	K_SSL;
 					bool		K_VerbindenTrennen;
+					void		SindAlleSSLVersionenDeaktiviert();
+					void		K_SteuerschaltflaechenFreigeben(const bool& freigeben=false);
 
 	private slots:
 					void		on_cbVerschluesselungFestlegen_stateChanged(int zustand);
+					void		on_cbSSL2_stateChanged(int zustand);
+					void		on_cbSSL3_stateChanged(int zustand);
+					void		on_cbTLS1_stateChanged(int zustand);
 					void		on_sfVerbinden_released();
+					void		on_sfSenden_released();
 					void		on_txtDebug_textChanged();
 					void		on_txtFehler_textChanged();
 					void		on_txtEmpfangen_textChanged();
-					void		on_txtSenden_returnPressed();
 					void		K_EsGabEinFehler(const QString & fehlertext);
 					void		K_DatenSindDa(const QByteArray &daten);
 					void		K_TunnelAufgebaut();

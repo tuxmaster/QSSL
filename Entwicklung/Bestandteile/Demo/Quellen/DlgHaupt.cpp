@@ -54,23 +54,76 @@ void QFrankDlgHaupt::on_cbVerschluesselungFestlegen_stateChanged(int zustand)
 	}
 }
 
+void QFrankDlgHaupt::SindAlleSSLVersionenDeaktiviert()
+{
+	if(cbSSL2->checkState()==Qt::Unchecked && cbSSL3->checkState()==Qt::Unchecked && cbTLS1->checkState()==Qt::Unchecked)
+	{
+		QMessageBox::critical(this,"Sinnlose Auswahl",trUtf8("Es können nicht alle SSL Versionen deaktivert werden!!"),QMessageBox::Ok,QMessageBox::NoButton);
+		sfVerbinden->setEnabled(false);
+	}
+	else
+	{
+		sfVerbinden->setEnabled(true);
+	}
+}
+
+void QFrankDlgHaupt::on_cbSSL2_stateChanged(int zustand)
+{
+	SindAlleSSLVersionenDeaktiviert();
+}
+
+void QFrankDlgHaupt::on_cbSSL3_stateChanged(int zustand)
+{
+	SindAlleSSLVersionenDeaktiviert();
+}
+
+void QFrankDlgHaupt::on_cbTLS1_stateChanged(int zustand)
+{
+	SindAlleSSLVersionenDeaktiviert();
+}
+
+void QFrankDlgHaupt::K_SteuerschaltflaechenFreigeben(const bool& freigeben)
+{
+	txtServer->setEnabled(freigeben);
+
+	intPort->setEnabled(freigeben);
+
+	sfVerbinden->setEnabled(freigeben);
+
+	cbVerschluesselungFestlegen->setEnabled(freigeben);
+	cbSSL2->setEnabled(freigeben);
+	cbSSL3->setEnabled(freigeben);
+	cbTLS1->setEnabled(freigeben);
+}
+
 void QFrankDlgHaupt::on_sfVerbinden_released()
 {
 	if(K_VerbindenTrennen)
 	{
 		//Verbinden mit SSL Server
 		sfVerbinden->setText("Trennen");
-		sfVerbinden->setEnabled(false);
+		
+		K_SteuerschaltflaechenFreigeben();
+
 		K_VerbindenTrennen=false;
 		if(cbVerschluesselungFestlegen->checkState()==Qt::Checked)
-			K_SSL->VerfuegbareAlgorithmenFestlegen(txtVerschluesselungen->text().split(":"));	
+			K_SSL->VerfuegbareAlgorithmenFestlegen(txtVerschluesselungen->text().split(":"));
+		char SSLVersionen=0;
+		if (cbSSL2->checkState()==Qt::Checked)
+			SSLVersionen=SSLVersionen|QFrankSSL::SSLv2;
+		if (cbSSL3->checkState()==Qt::Checked)
+			SSLVersionen=SSLVersionen|QFrankSSL::SSLv3;
+		if (cbTLS1->checkState()==Qt::Checked)
+			SSLVersionen=SSLVersionen|QFrankSSL::TLSv1;
+		if(SSLVersionen!=0)
+			K_SSL->SSLVersionenFestlegen((QFrankSSL::SSLVersion)SSLVersionen);
 		K_SSL->VerbindungHerstellen(txtServer->text(),intPort->value());
 	}
 	else
 	{
 		//Trennen vom SSL Server
 		sfVerbinden->setText("Verbinden");
-		txtSenden->setEnabled(false);
+		K_SteuerschaltflaechenFreigeben(true);
 		//K_SSL->VerbindungTrennen();
 		K_VerbindenTrennen=true;
 	}
@@ -81,11 +134,13 @@ void QFrankDlgHaupt::K_EsGabEinFehler(const QString & fehlertext)
 	txtFehler->append(fehlertext);
 	on_sfVerbinden_released();
 	sfVerbinden->setEnabled(true);
+	sfSenden->setEnabled(false);
 }
 
 void QFrankDlgHaupt::K_TunnelAufgebaut()
 {
 	txtSenden->setEnabled(true);
+	sfSenden->setEnabled(true);
 	txtSenden->setFocus();
 	sfVerbinden->setEnabled(true);
 
@@ -96,9 +151,10 @@ void QFrankDlgHaupt::K_DatenSindDa(const QByteArray &daten)
 	txtEmpfangen->append(daten);
 }
 
-void QFrankDlgHaupt::on_txtSenden_returnPressed()
+void QFrankDlgHaupt::on_sfSenden_released()
 {
-	K_SSL->DatenSenden(txtSenden->text().toUtf8());
+	K_SSL->DatenSenden(txtSenden->text().toUtf8()+"\r\n");
+	txtSenden->setFocus();
 }
 
 void QFrankDlgHaupt::on_txtDebug_textChanged()
