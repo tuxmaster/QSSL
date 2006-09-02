@@ -30,9 +30,17 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 #ifndef QT_NO_DEBUG
 	qWarning(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!").toLatin1().constData());
 #endif
-	//Der 1. erstellt den Zertifikatsspeicher
+	//Der 1. erstellt den Zertifikatsspeicher und initialisiert OpenSSL
 	if(K_Zertifikatspeicher==0)
 		K_Zertifikatspeicher=new QFrankSSLZertifikatspeicher(QCoreApplication::instance());
+	if(K_ZaehlerFuerKlasseninstanzen==0)
+	{
+		//OpenSSL initialisieren, hier lassen wir erst mal alle SSL Versionen zu
+		SSL_load_error_strings();
+		SSL_library_init();
+		K_OpenSSLStruktur=SSL_CTX_new(SSLv23_client_method());
+	}
+	K_ZaehlerFuerKlasseninstanzen++;
 	K_KeineOpenSSLStrukturText=trUtf8("OpenSSL Struktur nicht verfügbar\r\n");
 	K_KeineSSLStrukturText=trUtf8("SSL Struktur nicht verfügbar\r\n");
 	K_SSLServerNichtGefundenText=tr("Der SSL Server wurde nicht gefunden.");
@@ -40,21 +48,15 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	K_SSLServerVerbindungVomServerGetrenntText=tr("Der SSL Server hat die Verbindung getrennt.");
 	K_SSLStrukturKonnteNichtErzeugtWerdenText=tr("Die SSL Struktur konnte nicht erzeugt weden.\r\n");
 	K_Verbindungsstatus=QFrankSSL::GETRENNT;
-	K_OpenSSLStruktur=NULL;
 	K_SSLStruktur=NULL;
 	K_ZuBenutzendeSSLVersionen=QFrankSSL::SSLv2|QFrankSSL::SSLv3|QFrankSSL::TLSv1;
-	//OpenSSL initialisieren
-	SSL_load_error_strings();
-	SSL_library_init();
 	K_Empfangspuffer=BIO_new(BIO_s_mem());
 	K_Sendepuffer=BIO_new(BIO_s_mem());
-	//OpenSSL Verbindung aufbauen, hier lassen wir erst mal alle SSL Versionen zu.
-	K_OpenSSLStruktur=SSL_CTX_new(SSLv23_client_method());
 	if(K_OpenSSLStruktur==NULL)
 	{
 #ifndef QT_NO_DEBUG
-		qDebug("QFrankSSL OpenSSL Struktur konnte nicht erstellt werden.");
-		qDebug()<<K_SSLFehlertext();
+		qCritical("QFrankSSL OpenSSL Struktur konnte nicht erstellt werden.");
+		qCritical(K_SSLFehlertext().toAscii().constData());
 #endif
 		QTimer::singleShot(0,this,SLOT(K_FehlertextSenden()));
 		return;
@@ -78,15 +80,17 @@ QFrankSSL::~QFrankSSL()
 	//OpenSSL aufräumen
 	if(K_SSLStruktur!=NULL)
 		SSL_free(K_SSLStruktur);
-	ERR_free_strings();
-	if(K_OpenSSLStruktur!=NULL)
+	K_ZaehlerFuerKlasseninstanzen--;
+	//Der Letzte macht das Licht aus
+	if(K_ZaehlerFuerKlasseninstanzen==0)
 	{
-		SSL_CTX_free(K_OpenSSLStruktur);
+		if(K_OpenSSLStruktur!=NULL)
+			SSL_CTX_free(K_OpenSSLStruktur);
+		ERR_free_strings();
+		ERR_remove_state(0);		
 	}
 	//BIO_free(K_Sendepuffer);
-	//BIO_free(K_Empfangspuffer);
-	ERR_free_strings();
-	ERR_remove_state(0);
+	//BIO_free(K_Empfangspuffer);	
 }
 
 const bool QFrankSSL::K_SSLStrukturAufbauen()
@@ -119,6 +123,9 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 		Parameter=Parameter|SSL_OP_NO_SSLv3;
 	if(!(K_ZuBenutzendeSSLVersionen&QFrankSSL::TLSv1))
 		Parameter=Parameter|SSL_OP_NO_TLSv1;
+	//Damit die Callbackfunktion denn Zugriff auf die Klasse hat. 
+	K_ListeDerSSLVerbindungen.insert(K_SSLStruktur,this);
+	SSL_set_info_callback(K_SSLStruktur,K_SSL_Info_Callback);
 #ifndef QT_NO_DEBUG
 	qDebug("QFrankSSL SSL Struktur aufbauen: erfolgreich");
 	QString SSLOptionen="SSL Optionen:";
@@ -172,9 +179,6 @@ void QFrankSSL::K_VerfuegbareAlgorithmenHohlen()
 }
 
 
-
-
-
 void QFrankSSL::K_DatenKoennenGelesenWerden()
 {
 	int BytesDa=bytesAvailable();
@@ -225,6 +229,10 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 										qDebug(QString("\tSSL_Error ergab:%1").arg(K_SSL_Fehlercode).toLatin1().constData());
 #endif									
 									}
+									
+									//ServerAntwort=SSL_state_string_long(K_SSLStruktur);
+									//qDebug(ServerAntwort.toAscii().constData());
+
 									break;
 		case QFrankSSL::VERBINDEN:
 									/*	Wenn die Verbindung mit dem SSL Server steht, Handschlag durchführen
@@ -491,7 +499,22 @@ void QFrankSSL::K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fe
 	}
 }
 
+void QFrankSSL::K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe)
+{
+	/*	Haben wir das SSL Objekt in unserer Hashtabelle??
+		Wenn nicht ganz großes Problem
+	*/
+	if(!K_ListeDerSSLVerbindungen.contains(ssl))
+		qFatal(QString("QFrankSSL SSL_Info_Callback: Das SSL Objekt befindet sich nicht in der Tabelle!!").toLatin1().constData());
+#ifndef QT_NO_DEBUG
+	qCritical("bla bla");
+#endif
+}
+
 QFrankSSLZertifikatspeicher* QFrankSSL::K_Zertifikatspeicher=0;
+uint QFrankSSL::K_ZaehlerFuerKlasseninstanzen=0;
+SSL_CTX* QFrankSSL::K_OpenSSLStruktur=NULL;
+QHash<const SSL*,QFrankSSL*> QFrankSSL::K_ListeDerSSLVerbindungen;
 
 #ifndef QT_NO_DEBUG
 QString QFrankSSL::K_FeldNachHex(const QByteArray &feld) const

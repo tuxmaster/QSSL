@@ -78,7 +78,7 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				QString								K_SSLServerVerbindungVomServerGetrenntText;
 				QString								K_SSLStrukturKonnteNichtErzeugtWerdenText;
 				QString								K_OpenSSLFehlerText;
-				SSL_CTX*							K_OpenSSLStruktur;
+				static SSL_CTX*						K_OpenSSLStruktur;
 				SSL*								K_SSLStruktur;
 				BIO*								K_Empfangspuffer;
 				BIO*								K_Sendepuffer;
@@ -91,9 +91,12 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void								K_SSL_Handshake();
 				void								K_VerfuegbareAlgorithmenHohlen();
 				void								K_AllesZuruecksetzen();
+				static void							K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe);
 				QByteArray							K_EmpfangenenDaten;
 				QStringList							K_VerfuegbareAlgorithmen;
 				static QFrankSSLZertifikatspeicher*	K_Zertifikatspeicher;
+				static uint							K_ZaehlerFuerKlasseninstanzen;
+				static QHash<const SSL*,QFrankSSL*>	K_ListeDerSSLVerbindungen;
 				QFrankSSL::Verbindungsstatus		K_Verbindungsstatus;
 				QFrankSSL::SSLVersion				K_ZuBenutzendeSSLVersionen;
 
