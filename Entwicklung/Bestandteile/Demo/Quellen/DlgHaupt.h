@@ -52,6 +52,7 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 					void		K_EsGabEinFehler(const QString & fehlertext);
 					void		K_DatenSindDa(const QByteArray &daten);
 					void		K_TunnelAufgebaut();
+					void		K_VerbindungGetrennt(const bool &mitFehler);
 };
 
 #endif

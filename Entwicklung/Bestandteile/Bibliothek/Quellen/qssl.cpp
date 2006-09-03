@@ -50,8 +50,6 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	K_Verbindungsstatus=QFrankSSL::GETRENNT;
 	K_SSLStruktur=NULL;
 	K_ZuBenutzendeSSLVersionen=QFrankSSL::SSLv2|QFrankSSL::SSLv3|QFrankSSL::TLSv1;
-	K_Empfangspuffer=BIO_new(BIO_s_mem());
-	K_Sendepuffer=BIO_new(BIO_s_mem());
 	if(K_OpenSSLStruktur==NULL)
 	{
 #ifndef QT_NO_DEBUG
@@ -64,19 +62,15 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	connect(this,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError)));
 	connect(this,SIGNAL(readyRead()),this,SLOT(K_DatenKoennenGelesenWerden()));
 	connect(this,SIGNAL(connected()),this,SLOT(K_MitServerVerbunden()));
-	
+	connect(this,SIGNAL(disconnected()),this,SLOT(K_VerbindungZumServerGetrennt()));	
 }
 
 QFrankSSL::~QFrankSSL()
 {
 	//Wenn verbunden dann trennen
 	if(state()==QAbstractSocket::ConnectedState)
-	{
-		//Erst SSL Verbindung trennen wenn vorhanden, und dann vom Server selbst
-		//SSL abbauen
+		//Erst SSL Verbindung trennen wenn vorhanden, und dann vom Server selbst trennen
 		VerbindungTrennen();
-		disconnectFromHost();
-	}	
 	//OpenSSL aufräumen
 	if(K_SSLStruktur!=NULL)
 		SSL_free(K_SSLStruktur);
@@ -126,6 +120,7 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 	//Damit die Callbackfunktion denn Zugriff auf die Klasse hat. 
 	K_ListeDerSSLVerbindungen.insert(K_SSLStruktur,this);
 	SSL_set_info_callback(K_SSLStruktur,K_SSL_Info_Callback);
+	
 #ifndef QT_NO_DEBUG
 	qDebug("QFrankSSL SSL Struktur aufbauen: erfolgreich");
 	QString SSLOptionen="SSL Optionen:";
@@ -142,7 +137,7 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 		SSLOptionen.append("\r\n\tKein TLSv1");
 	else
 		SSLOptionen.append("\r\n\tTLSv1");
-	qDebug(SSLOptionen.toUtf8().constData());
+	qDebug(SSLOptionen.toLatin1().constData());
 #else
 	SSL_set_options(K_SSLStruktur,Parameter);
 #endif
@@ -243,21 +238,23 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 									if(ServerAntwort.contains("server hello"))
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(trUtf8("QFrankSSL Daten empfangen: Bereit für den Handschake.\r\nAntwort vom Server: %1").arg(ServerAntwort).toLatin1().constData());
+										qDebug(trUtf8("QFrankSSL Daten empfangen: Bereit für den Handschake.\r\nAntwort vom Server: %1").arg(ServerAntwort).toLatin1().
+																																		constData());
 #endif
 										K_SSL_Handshake();
 									}
 									else
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(trUtf8("QFrankSSL Daten empfangen: Nicht bereit für den Handschake.\r\nAntwort vom Server: %1").arg(ServerAntwort).toLatin1().constData());
+										qDebug(trUtf8("QFrankSSL Daten empfangen: Nicht bereit für den Handschake.\r\nAntwort vom Server: %1").arg(ServerAntwort).
+																																				toLatin1().constData());
 #endif
 									}
 									break;
 		case QFrankSSL::HANDSCHLAG:
-									/*	schauen wir mal ob der Handschlag geklappt hat.
-										es sollte der Text read finished oder read server verfify stehen drin stehen.
-									*/
+										/*	schauen wir mal ob der Handschlag geklappt hat.
+											es sollte der Text read finished oder read server verfify stehen drin stehen.
+										*/
 									ServerAntwort=SSL_state_string_long(K_SSLStruktur);
 									if(ServerAntwort.contains("read finished") || ServerAntwort.contains("read server verfify"))
 									{
@@ -270,7 +267,8 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 									else
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(QString("QFrankSSL Daten empfangen: Handshake gescheitert.\r\nAntwort vom Server: %1").arg(ServerAntwort).toLatin1().constData());
+										qDebug(QString("QFrankSSL Daten empfangen: Handshake gescheitert.\r\nAntwort vom Server: %1").arg(ServerAntwort).toLatin1().
+																																						constData());
 #endif
 									}
 									break;
@@ -312,6 +310,15 @@ void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &p
 	}
 	
 	connectToHost(rechnername,port,betriebsart);
+}
+
+void QFrankSSL::K_VerbindungZumServerGetrennt()
+{
+#ifndef QT_NO_DEBUG
+	qDebug("QFrankSSL Verbindung zum Server verlohren.");
+#endif
+	K_AllesZuruecksetzen();
+	emit VerbindungGetrennt(false);
 }
 
 const bool QFrankSSL::K_MussWasGesendetWerden()
@@ -400,6 +407,8 @@ void QFrankSSL::K_MitServerVerbunden()
 #ifndef QT_NO_DEBUG
 	qDebug("QFrankSSL Verbindung mit dem Server hergestellt. Baue OpenSSL auf");
 #endif
+	K_Empfangspuffer=BIO_new(BIO_s_mem());
+	K_Sendepuffer=BIO_new(BIO_s_mem());
 	SSL_set_bio(K_SSLStruktur, K_Empfangspuffer, K_Sendepuffer);
 	SSL_set_connect_state(K_SSLStruktur);
 	K_Verbindungsstatus=QFrankSSL::VERBINDEN;
@@ -433,22 +442,37 @@ void QFrankSSL::K_FehlertextSenden()
 
 void QFrankSSL::VerbindungTrennen()
 {
+#ifndef QT_NO_DEBUG
+	qDebug("QFrankSSL Verbindung trennen");
+#endif
 	if(K_SSLStruktur==NULL)
 		return;
-	SSL_shutdown(K_SSLStruktur);
+	K_Verbindungsstatus=QFrankSSL::TRENNEN;
+	if(SSL_shutdown(K_SSLStruktur)==0)
+		SSL_shutdown(K_SSLStruktur);
 	if(K_MussWasGesendetWerden())
 			K_DatenSenden();
+	else
+		disconnectFromHost();	
 }
 
 void QFrankSSL::K_AllesZuruecksetzen()
 {	
+#ifndef QT_NO_DEBUG
+	qDebug(trUtf8("QFrankSSL alles zurücksetzen").toLatin1().constData());
+#endif
 	if(state()==QAbstractSocket::ConnectedState)
 		disconnectFromHost();
 	//SSL Struktur löschen
 	if(K_SSLStruktur!=NULL)
+	{
+		if(K_ListeDerSSLVerbindungen.contains(K_SSLStruktur))
+			K_ListeDerSSLVerbindungen.remove(K_SSLStruktur);
 		SSL_free(K_SSLStruktur);
+		
+	}
 	K_SSLStruktur=NULL;
-
+	K_Verbindungsstatus=QFrankSSL::GETRENNT;
 }
 
 const bool QFrankSSL::K_OpenSSLMitBugs()const
@@ -472,31 +496,36 @@ const bool QFrankSSL::K_OpenSSLMitBugs()const
 
 void QFrankSSL::K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fehler)
 {
-	K_AllesZuruecksetzen();
 	switch(fehler)
 	{
 		case QAbstractSocket::HostNotFoundError:
 #ifndef QT_NO_DEBUG
 													qWarning("QFrank SSL Verbindung: SSL Server nicht gefunden");
 #endif
+													K_AllesZuruecksetzen();
 													emit SSLFehler(K_SSLServerNichtGefundenText);
 													break;
 		case QAbstractSocket::ConnectionRefusedError:
 #ifndef QT_NO_DEBUG
 													qWarning("QFrank SSL Verbindung: SSL Server Verbindung abgelehnt");
 #endif
+													K_AllesZuruecksetzen();
 													emit SSLFehler(K_SSLServerVerbindungAbgelehntText);
 													break;
 		case QAbstractSocket::RemoteHostClosedError:
 #ifndef QT_NO_DEBUG
 													qDebug("QFrank SSL Verbindung: SSL Server Verbindung getrennt");
 #endif
-													emit SSLFehler(K_SSLServerVerbindungVomServerGetrenntText);
+													/*if(K_Verbindungsstatus==QFrankSSL::VERBUNDEN)
+														emit VerbindungGetrennt(false);
+													else
+														emit SSLFehler(K_SSLServerVerbindungVomServerGetrenntText);
 													break;
 		default:
 													qFatal("QFrank SSL Verbindung: Zustand nicht bearbeitet Code: %i",fehler);
-													break;
+													break;*/	
 	}
+	//K_AllesZuruecksetzen();
 }
 
 void QFrankSSL::K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe)
@@ -504,12 +533,23 @@ void QFrankSSL::K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe)
 	/*	Haben wir das SSL Objekt in unserer Hashtabelle??
 		Wenn nicht ganz großes Problem
 	*/
+	//int Wo=wo&~SSL_ST_MASK;
 	if(!K_ListeDerSSLVerbindungen.contains(ssl))
 		qFatal(QString("QFrankSSL SSL_Info_Callback: Das SSL Objekt befindet sich nicht in der Tabelle!!").toLatin1().constData());
+	qDebug("wo=0x%X",wo);
+	switch(wo)
+	{
+		case SSL_CB_CONNECT_EXIT:
 #ifndef QT_NO_DEBUG
-	qCritical("bla bla");
+								qDebug("QFrankSSL SSL_Info_Callback: meldet ein Fehler");
 #endif
+								qDebug(QString("%1").arg(rueckgabe).toLatin1().constData());
+								break;
+	}
+
 }
+
+
 
 QFrankSSLZertifikatspeicher* QFrankSSL::K_Zertifikatspeicher=0;
 uint QFrankSSL::K_ZaehlerFuerKlasseninstanzen=0;

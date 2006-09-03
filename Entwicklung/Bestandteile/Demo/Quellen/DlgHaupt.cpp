@@ -34,6 +34,7 @@ QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 	connect(K_SSL,SIGNAL(SSLFehler(const QString)),this,SLOT(K_EsGabEinFehler(const QString&)));
 	connect(K_SSL,SIGNAL(DatenBereitZumAbhohlen(const QByteArray&)),this,SLOT(K_DatenSindDa(const QByteArray&)));
 	connect(K_SSL,SIGNAL(TunnelBereit()),this,SLOT(K_TunnelAufgebaut()));
+	connect(K_SSL,SIGNAL(VerbindungGetrennt(const bool)),this,SLOT(K_VerbindungGetrennt(const bool&)));
 }
 
 QFrankDlgHaupt::~QFrankDlgHaupt()
@@ -124,14 +125,15 @@ void QFrankDlgHaupt::on_sfVerbinden_released()
 		//Trennen vom SSL Server
 		sfVerbinden->setText("Verbinden");
 		K_SteuerschaltflaechenFreigeben(true);
-		//K_SSL->VerbindungTrennen();
+		K_SSL->VerbindungTrennen();
 		K_VerbindenTrennen=true;
 	}
 }
 
 void QFrankDlgHaupt::K_EsGabEinFehler(const QString & fehlertext)
 {
-	txtFehler->append(fehlertext);
+	if(fehlertext!="")
+		txtFehler->append(fehlertext);
 	on_sfVerbinden_released();
 	sfVerbinden->setEnabled(true);
 	sfSenden->setEnabled(false);
@@ -144,6 +146,21 @@ void QFrankDlgHaupt::K_TunnelAufgebaut()
 	txtSenden->setFocus();
 	sfVerbinden->setEnabled(true);
 
+}
+
+void QFrankDlgHaupt::K_VerbindungGetrennt(const bool &mitFehler)
+{
+	if(!mitFehler)
+	{
+		qDebug("Demo: Verbindung ordenlich getrennt");
+		K_EsGabEinFehler("");
+	}
+	else
+	{
+		qDebug("Demo: Verbindung nicht ordenlich getrennt");
+		K_EsGabEinFehler("");
+	}
+	txtSenden->setEnabled(false);
 }
 
 void QFrankDlgHaupt::K_DatenSindDa(const QByteArray &daten)

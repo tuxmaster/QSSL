@@ -60,11 +60,16 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 	signals:
 				void								SSLFehler(const QString &fehlertext)const;
 				void								DatenBereitZumAbhohlen(const QByteArray &daten)const;
+				void								VerbindungGetrennt(const bool &fehler)const;
 				void								TunnelBereit()const;
 
 	private slots:
 
-				void								K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fehler);	
+				void								K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fehler);
+				void								K_FehlertextSenden();
+				void								K_MitServerVerbunden();
+				void								K_VerbindungZumServerGetrennt();
+				void								K_DatenKoennenGelesenWerden();
 
 	private:
 				enum								Fehlerquelle{SSL_Struktur=0x00,SSL_Bibliothek=0x01};
@@ -104,10 +109,6 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 			QString									K_FeldNachHex(const QByteArray &feld) const;
 #endif
 
-	private slots:
-				void								K_FehlertextSenden();
-				void								K_MitServerVerbunden();
-				void								K_DatenKoennenGelesenWerden();
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(QFrankSSL::SSLVersion)
 #endif
