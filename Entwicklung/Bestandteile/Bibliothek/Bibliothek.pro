@@ -22,16 +22,20 @@ VERSION		= 0.1.0
 TARGET		= qssl
 win32{
 	DEFINES		+= DLL_BAUEN	
-	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8b-Debug/include
-	LIBS		+= -L../../../../../OpenSSL/0.9.8b-Debug/lib -lssleay32 -llibeay32
+	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8c/include
+	LIBS		+= -L../../../../../OpenSSL/0.9.8c/lib -lssleay32 -llibeay32
 }
 unix{
 	INCLUDEPATH	+= /usr/include
 	LIBS		+= -L/usr/lib -lssl
 }
 
+TRANSLATIONS	= Uebersetzungen/qssl_en.ts\
+				  Uebersetzungen/qssl_XX.ts
 
-HEADERS		= Quellen/Zertifikatsspeicher.h\ 
+HEADERS		= Quellen/Datenstromfilter.h\
+			  Quellen/Zertifikatsspeicher.h\ 
 			  Quellen/qssl.h
-SOURCES		= Quellen/Zertifikatsspeicher.cpp\
+SOURCES		= Quellen/Datenstromfilter.cpp\
+			  Quellen/Zertifikatsspeicher.cpp\
 			  Quellen/qssl.cpp 
