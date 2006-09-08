@@ -35,6 +35,8 @@ QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 	connect(K_SSL,SIGNAL(DatenBereitZumAbhohlen(const QByteArray&)),this,SLOT(K_DatenSindDa(const QByteArray&)));
 	connect(K_SSL,SIGNAL(TunnelBereit()),this,SLOT(K_TunnelAufgebaut()));
 	connect(K_SSL,SIGNAL(VerbindungGetrennt(const bool)),this,SLOT(K_VerbindungGetrennt(const bool&)));
+	connect(K_SSL,SIGNAL(PasswortFuerDenZertifikatsspeicher()),this,SLOT(K_PasswortAbfragen()));
+	QTimer::singleShot(0,this,SLOT(K_ZertifikateLaden()));	
 }
 
 QFrankDlgHaupt::~QFrankDlgHaupt()
@@ -148,6 +150,12 @@ void QFrankDlgHaupt::K_TunnelAufgebaut()
 
 }
 
+void QFrankDlgHaupt::K_PasswortAbfragen()
+{
+	K_SSL->ZertifikatsspeicherPasswort(&QInputDialog::getText(this,tr("Passwortabfrage"),trUtf8("Bitte geben Sie das Passwort für den Zertifikatspeicher ein."),
+															QLineEdit::NoEcho,QString(),0,(Qt::WFlags)Qt::Widget^Qt::WindowTitleHint));
+}
+
 void QFrankDlgHaupt::K_VerbindungGetrennt(const bool &mitFehler)
 {
 	if(!mitFehler)
@@ -187,6 +195,11 @@ void QFrankDlgHaupt::on_txtFehler_textChanged()
 void QFrankDlgHaupt::on_txtEmpfangen_textChanged()
 {
 	txtEmpfangen->verticalScrollBar()->setSliderPosition(txtEmpfangen->verticalScrollBar()->maximum());
+}
+
+void QFrankDlgHaupt::K_ZertifikateLaden()
+{
+	K_SSL->ZertifikateLaden();
 }
 
 void QtNachrichten(QtMsgType type, const char *msg)

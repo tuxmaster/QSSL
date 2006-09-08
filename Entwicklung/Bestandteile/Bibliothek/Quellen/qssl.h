@@ -50,6 +50,8 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void								VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart=QIODevice::ReadWrite);
 				void								VerfuegbareAlgorithmenFestlegen(const QStringList &welche){K_VerfuegbareAlgorithmen=welche;}
 				void								VerbindungTrennen();
+				void								ZertifikateLaden();
+				void								ZertifikatsspeicherPasswort(QString* passwort);
 				void								SSLVersionenFestlegen(const QFrankSSL::SSLVersion &sslVersion){K_ZuBenutzendeSSLVersionen=sslVersion;}
 				const QFrankSSL::SSLVersion&		SSLVersionen()const{return K_ZuBenutzendeSSLVersionen;}
 				const QStringList&					VerfuegbareAlgorithmen()const{return K_VerfuegbareAlgorithmen;}
@@ -62,6 +64,7 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void								DatenBereitZumAbhohlen(const QByteArray &daten)const;
 				void								VerbindungGetrennt(const bool &fehler)const;
 				void								TunnelBereit()const;
+				void								PasswortFuerDenZertifikatsspeicher()const;
 
 	private slots:
 

@@ -33,5 +33,55 @@ QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObjec
 #ifndef QT_NO_DEBUG
 	qDebug("Ablageort des Zertifikatsspeichers:\r\n\tSystemweit:%s\r\n\tBenutzer:%s",K_SpeicherortSystemweit.toAscii().constData(),
 																					K_SpeicherortBenutzer.toAscii().constData());
-#endif	
+#endif
+	K_Speichergeladen=false;
+}
+
+void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
+{
+	if(K_Speichergeladen)
+	{
+#ifndef QT_NO_DEBUG
+		qWarning("QFrankSSLZertifikatspeicher Laden: speicher ist schon geladen");
+#endif
+		emit Fehler(tr("Der Zertifikatsspeicher wurde bereits geladen"));
+		return;
+	}
+	if(!passwort)
+	{
+		//Passwort für den Nutzerspeicher abfragen
+		emit PasswortFuerDenSpeicherHohlen();
+		return;
+	}
+	QFile DateiBenutzer(K_SpeicherortBenutzer);
+	QFile DateiSystem(K_SpeicherortSystemweit);
+	if(DateiSystem.exists())
+	{
+#ifndef QT_NO_DEBUG
+		qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
+#endif
+	}
+	if(DateiBenutzer.exists())
+	{
+		QFrankDatenstromfilter Entschluesselung(&DateiBenutzer,K_Passwort);
+		if(!Entschluesselung.open(QIODevice::ReadOnly))
+		{
+#ifndef QT_NO_DEBUG
+			qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: konnte den Speicher des Nutzers nicht öffnen\r\nUrsache:%1","debug").arg(Entschluesselung.
+																																					errorString())));
+#endif
+			emit Fehler(tr("Der Zertifikatspeicher des Benutzers konnte nicht geladen werden."));
+			return;
+		}
+#ifndef QT_NO_DEBUG
+		qDebug("QFrankSSLZertifikatspeicher Laden: Nutzerspeicher geladen.");
+#endif
+	}
+	K_Speichergeladen=true;
+}
+
+void QFrankSSLZertifikatspeicher::PasswortFuerDenSpeicher(QString* passwort)
+{
+	K_Passwort=passwort;
+	SpeicherLaden(true);
 }

@@ -27,9 +27,19 @@ class QFrankSSLZertifikatspeicher: public QObject
 	Q_OBJECT
 	public:
 				QFrankSSLZertifikatspeicher(QObject* eltern);
+				void		SpeicherLaden(bool passwort=false);
+
+	public slots:
+				void		PasswortFuerDenSpeicher(QString* passwort);				
+
+	signals:
+				void		Fehler(const QString &fehlertext)const;
+				void		PasswortFuerDenSpeicherHohlen()const;
 
 	private:
-				QString	K_SpeicherortSystemweit;
-				QString K_SpeicherortBenutzer;
+				QString		K_SpeicherortSystemweit;
+				QString		K_SpeicherortBenutzer;
+				bool		K_Speichergeladen;
+				QString*	K_Passwort;
 };
 #endif

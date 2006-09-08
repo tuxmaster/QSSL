@@ -21,23 +21,28 @@
 
 #include <QtCore>
 
+typedef struct evp_cipher_ctx_st EVP_CIPHER_CTX;
+
 class QFrankDatenstromfilter: public  QIODevice
 {
 	Q_OBJECT
 	public:
-				QFrankDatenstromfilter(QIODevice *quelldatenstrom);
-				bool		open(OpenMode strommodus);
+				QFrankDatenstromfilter(QIODevice *quelldatenstrom,QString *schluessel);
+				~QFrankDatenstromfilter();
+				bool			open(OpenMode strommodus);
 				//Der Filter ist nur sequenziell
-				bool		isSequential()const{return true;}
-				bool		seek(qint64 position); 
-				bool		reset();
+				bool			isSequential()const{return true;}
+				bool			seek(qint64 position); 
+				bool			reset();
 				//Squenzieller Datenstrom hat keine Position
-				qint64		pos()const{return 0;}
-				void		close();
+				qint64			pos()const{return 0;}
+				void			close();
 					
 	private:
-				qint64		readData(char *daten,qint64 maximaleLaenge);
-				qint64		writeData(const char *daten, qint64 maximaleLaenge);
-				QIODevice*	Quelldatenstrom;
+				qint64			readData(char *daten,qint64 maximaleLaenge);
+				qint64			writeData(const char *daten, qint64 maximaleLaenge);
+				QIODevice*		K_Quelldatenstrom;
+				EVP_CIPHER_CTX*	K_Verschluesseln;
+				EVP_CIPHER_CTX*	K_Entschluesseln;
 };
 #endif

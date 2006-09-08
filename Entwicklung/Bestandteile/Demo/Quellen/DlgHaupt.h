@@ -53,6 +53,8 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 					void		K_DatenSindDa(const QByteArray &daten);
 					void		K_TunnelAufgebaut();
 					void		K_VerbindungGetrennt(const bool &mitFehler);
+					void		K_ZertifikateLaden();
+					void		K_PasswortAbfragen();
 };
 
 #endif
