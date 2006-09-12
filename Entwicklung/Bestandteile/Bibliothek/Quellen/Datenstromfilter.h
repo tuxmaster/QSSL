@@ -44,5 +44,9 @@ class QFrankDatenstromfilter: public  QIODevice
 				QIODevice*		K_Quelldatenstrom;
 				EVP_CIPHER_CTX*	K_Verschluesseln;
 				EVP_CIPHER_CTX*	K_Entschluesseln;
+
+#ifndef QT_NO_DEBUG
+				QString			K_FeldNachHex(const QByteArray &feld) const;
+#endif
 };
 #endif

@@ -20,6 +20,8 @@
 #include "Zertifikatsspeicher.h"
 #include "Datenstromfilter.h"
 
+#include <QtXml>
+
 QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObject(eltern)
 {
 	//Warnung bei Debug
@@ -55,6 +57,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 	}
 	QFile DateiBenutzer(K_SpeicherortBenutzer);
 	QFile DateiSystem(K_SpeicherortSystemweit);
+	QDomDocument* Speicher=new QDomDocument();
 	if(DateiSystem.exists())
 	{
 #ifndef QT_NO_DEBUG
@@ -71,12 +74,25 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 																																					errorString())));
 #endif
 			emit Fehler(tr("Der Zertifikatspeicher des Benutzers konnte nicht geladen werden."));
+			delete Speicher;
 			return;
 		}
+		if(!Speicher->setContent(&Entschluesselung))
+		{
+#ifndef QT_NO_DEBUG
+			qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Speicher des Nutzers beschädigt","debug")));
+#endif
+			emit Fehler(trUtf8("Der Zertifikatspeicher des Benutzers ist beschädigt."));
+			delete Speicher;
+			return;
+		}
+
 #ifndef QT_NO_DEBUG
 		qDebug("QFrankSSLZertifikatspeicher Laden: Nutzerspeicher geladen.");
+		qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
 #endif
 	}
+	delete Speicher;
 	K_Speichergeladen=true;
 }
 

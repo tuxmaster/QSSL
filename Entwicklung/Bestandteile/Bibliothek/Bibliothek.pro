@@ -17,6 +17,7 @@
 PROJEKTTEIL	= Bibliothek
 TEMPLATE	= lib
 CONFIG		+= dll
+QT			+= xml
 include (../../Vorgaben.pri)
 VERSION		= 0.1.0
 TARGET		= qssl

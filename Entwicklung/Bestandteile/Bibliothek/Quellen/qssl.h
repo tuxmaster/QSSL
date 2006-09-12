@@ -110,8 +110,8 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				static QTranslator*					K_Uebersetzung;
 
 #ifndef QT_NO_DEBUG
-			QString									K_FeldNachHex(const QByteArray &feld) const;
-			void									K_ServerZertifikatUntersuchen()const;
+				QString								K_FeldNachHex(const QByteArray &feld) const;
+				void								K_ServerZertifikatUntersuchen()const;
 #endif
 
 };

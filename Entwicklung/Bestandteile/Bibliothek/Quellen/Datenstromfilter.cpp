@@ -26,19 +26,36 @@ QFrankDatenstromfilter::QFrankDatenstromfilter(QIODevice *quelldatenstrom,QStrin
 #ifndef QT_NO_DEBUG
 	qWarning(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!","debug").toLatin1().constData());
 #endif
-	//OpenSSL_add_all_algorithms();
-
-	unsigned char K_IV[]={1,2,3,4};
-
+	//SHA256 vom PW=Schlüssel passt pima, da dieser 256 Bit lang sein muss
+	EVP_MD_CTX Hash;
+	EVP_MD_CTX_init(&Hash);
+	QByteArray Passworthash;
+	Passworthash.resize(32);//32Byte=256 Bbit
+	if(EVP_DigestInit_ex(&Hash,EVP_sha256(),NULL)!=1)
+		qFatal("QFrankDatenstromfilter der Hashalgorithmus konnte nicht initialisiert werden.");
+	if(EVP_DigestUpdate(&Hash,schluessel->constData(),schluessel->size())!=1)
+		qFatal("QFrankDatenstromfilter Passwort konnte nicht in den Hashspeicher geschrieben werden");
+	if(EVP_DigestFinal_ex(&Hash,(uchar*)Passworthash.data(),NULL)!=1)
+		qFatal("QFrankDatenstromfilter Hash vom PW konnte nicht berechnet werden.");
+	EVP_MD_CTX_cleanup(&Hash);
+#ifndef QT_NO_DEBUG
+	qDebug(qPrintable(QString("QFrankDatenstromfilter Hash vom Passwort \"%1\":\r\n%2").arg(*schluessel).arg(K_FeldNachHex(Passworthash))));
+#endif
+	//Passwort entsorgen
+	schluessel->clear();
+	//uchar test[]={9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	uchar K_IV[]={1,2,3,4,0,0,0,0,0,0,0,0,0,0,0,0};
 	K_Verschluesseln=new EVP_CIPHER_CTX();
 	K_Entschluesseln=new EVP_CIPHER_CTX();
 	EVP_CIPHER_CTX_init(K_Verschluesseln);
 	EVP_CIPHER_CTX_init(K_Entschluesseln);
-	//Es wird eine AES256 Verschlüsselung im CBC Modus benutzt.
-	if(EVP_EncryptInit_ex(K_Verschluesseln,EVP_aes_256_cbc(),NULL,(uchar*)qPrintable(*schluessel),K_IV)!=1 ||
-		EVP_DecryptInit_ex(K_Entschluesseln,EVP_aes_256_cbc(),NULL,(uchar*)qPrintable(*schluessel),K_IV)!=1)
+	//Es wird eine AES256 Verschlüsselung im CFB8 Modus benutzt.
+	if(EVP_EncryptInit_ex(K_Verschluesseln,EVP_aes_256_cfb8(),NULL,(uchar*)Passworthash.constData(),K_IV)!=1 ||
+		EVP_DecryptInit_ex(K_Entschluesseln,EVP_aes_256_cfb8(),NULL,(uchar*)Passworthash.constData(),K_IV)!=1)
 		qFatal(qPrintable(trUtf8("QFrankDatenstromfilter der Verschlüsselungsalgorithmus konnte nicht initialisiert werden.","debug")));
-	schluessel->clear();
+	//Hash entsorgen
+	Passworthash.clear();
+	
 }
 
 QFrankDatenstromfilter::~QFrankDatenstromfilter()
@@ -78,7 +95,40 @@ void QFrankDatenstromfilter::close()
 
 qint64 QFrankDatenstromfilter::readData(char *daten,qint64 maximaleLaenge)
 {
-	return -1;
+#ifndef QT_NO_DEBUG
+	qDebug("QFrankDatenstromfilter: es sollen %i Bytes gelesen werden",(int)maximaleLaenge);
+#endif
+	int Entschluesselt, EntschluesseltEntgueltig;
+	QByteArray Puffer=K_Quelldatenstrom->read(maximaleLaenge);
+#ifndef QT_NO_DEBUG
+	qDebug("\tDie Quelle lieferte %i Bytes.",Puffer.size());
+#endif
+	if(EVP_DecryptUpdate(K_Entschluesseln,(uchar*)daten,&Entschluesselt,(uchar*)Puffer.constData(),Puffer.size())!=1)
+	{
+#ifndef QT_NO_DEBUG
+		qWarning(qPrintable(trUtf8("QFrankDatenstromfilter: Entschlüsselung gescheitert","debug")));
+#endif
+		return -1;
+	}
+	else
+	{
+		if(EVP_DecryptFinal_ex(K_Entschluesseln,((uchar*)daten)+Entschluesselt,&EntschluesseltEntgueltig)!=1)
+		{
+#ifndef QT_NO_DEBUG
+			qWarning(qPrintable(trUtf8("QFrankDatenstromfilter: Entgültige Entschlüsselung gescheitert","debug")));
+#endif
+			return -1;
+		}
+		else
+		{
+			Entschluesselt=Entschluesselt+EntschluesseltEntgueltig;
+#ifndef QT_NO_DEBUG
+			qDebug(qPrintable(trUtf8("QFrankDatenstromfilter: es wurden %1 Bytes entschlüsselt","debug").arg(Entschluesselt)));
+			qDebug(qPrintable(QString("\tDaten: %1").arg(QString(QByteArray(daten,Entschluesselt)))));
+#endif
+		}
+	}
+	return Entschluesselt;
 }
 
 qint64 QFrankDatenstromfilter::writeData(const char *daten, qint64 maximaleLaenge)
@@ -99,3 +149,25 @@ bool QFrankDatenstromfilter::reset()
 	setErrorString(tr("Ein Sequenzieller Datenstrom kennt kein Reset!"));
 	return false;
 }
+
+#ifndef QT_NO_DEBUG
+QString QFrankDatenstromfilter::K_FeldNachHex(const QByteArray &feld) const
+{
+	QString tmp="";
+	uchar low,high;
+	for(int x=0;x<feld.size();x++)
+	{
+		//Byte zerlegen
+		high=((feld.at(x) & 0xf0) >>4)+0x30;
+		low=(feld.at(x) & 0x0f)+0x30;
+		if(high>0x39)
+			high=high+0x07;
+		if(low>0x39)
+			low=low+0x07;
+		tmp.append(high);
+		tmp.append(low);
+		tmp.append("-");
+	}
+	return tmp.left(tmp.size()-1);
+}
+#endif
