@@ -254,8 +254,8 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 									else
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(trUtf8("QFrankSSL Daten empfangen: Nicht bereit für den Handschake.\r\nAntwort vom Server: %1","debug").arg
-																																(ServerAntwort).toLatin1().constData());
+										qDebug(qPrintable(trUtf8("QFrankSSL Daten empfangen: Nicht bereit für den Handschake.\r\nAntwort vom Server: %1","debug").arg
+																																(ServerAntwort)));
 #endif
 									}
 									break;
@@ -267,7 +267,7 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 									if(ServerAntwort.contains("read finished") || ServerAntwort.contains("read server verfify"))
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(QString("QFrankSSL Daten empfangen: Handshake ok.\r\nAntwort vom Server: %1").arg(ServerAntwort).toLatin1().constData());
+										qDebug(qPrintable(QString("QFrankSSL Daten empfangen: Handshake ok.\r\nAntwort vom Server: %1").arg(ServerAntwort)));
 										K_ServerZertifikatUntersuchen();
 #endif
 										K_Verbindungsstatus=QFrankSSL::VERBUNDEN;
@@ -276,8 +276,7 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 									else
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(QString("QFrankSSL Daten empfangen: Handshake gescheitert.\r\nAntwort vom Server: %1").arg(ServerAntwort).toLatin1().
-																																						constData());
+										qDebug(qPrintable(QString("QFrankSSL Daten empfangen: Handshake gescheitert.\r\nAntwort vom Server: %1").arg(ServerAntwort)));
 #endif
 									}
 									break;
@@ -611,11 +610,20 @@ void QFrankSSL::K_ServerZertifikatUntersuchen()const
 		qDebug("QFrankSSL Server Zertifikat untersuchen: Der Server zeigt kein Zertifikat vor.");
 	else
 	{
-		QByteArray Speicher;
-		/*if(i2d_X509(Zertifikat,(uchar**)&Speicher)<0)
-			qWarning("QFrankSSL Server Zertifikat untersuchen: Zertifikat konnte nich umcodiert werden");
+		BIO *Puffer = BIO_new(BIO_s_mem());
+		if(X509_print(Puffer,Zertifikat)==1)
+		{
+			QByteArray Serverzert;
+			int Groesse=BIO_ctrl(Puffer,BIO_CTRL_PENDING,0,NULL);
+			Serverzert.resize(Groesse);
+			BIO_read(Puffer,Serverzert.data(),Groesse);
+			BIO_free(Puffer);
+			qDebug(qPrintable(QString("QFrankSSL Server Zertifikat untersuchen: Das Serverzertifikat:\r\n%1").arg(QString(Serverzert))));
+		}
 		else
-			qDebug("QFrankSSL Server Zertifikat untersuchen: \r\nZertifikat: %s",Speicher.data());*/
+		{
+			qDebug("QFrankSSL Server Zertifikat untersuchen: Zertifikat konnte nicht gelesen werden.");
+		}
 	}
 }
 #endif

@@ -34,6 +34,7 @@ class QFrankSSLZertifikatspeicher: public QObject
 
 	signals:
 				void		Fehler(const QString &fehlertext)const;
+				void		Warnung(const QString &warnungstext)const;
 				void		PasswortFuerDenSpeicherHohlen()const;
 
 	private:

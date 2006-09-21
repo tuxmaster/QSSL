@@ -18,9 +18,12 @@
  */
 
 #include "Zertifikatsspeicher.h"
-#include "Datenstromfilter.h"
 
+//Den Filter brauchen wir nur unter nicht Windows Sytemen, da wir unter Windows den Systemeigenen nutzen.
+//#ifndef Q_WS_WIN
+#include "Datenstromfilter.h"
 #include <QtXml>
+//#endif
 
 QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObject(eltern)
 {
@@ -28,6 +31,7 @@ QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObjec
 #ifndef QT_NO_DEBUG
 	qWarning(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!","debug").toLatin1().constData());
 #endif
+//#ifndef Q_WS_WIN
 	QSettings EinstellungenSystem(QSettings::IniFormat,QSettings::SystemScope,"QSSL","tmp");
 	QSettings EinstellungenNutzer(QSettings::IniFormat,QSettings::UserScope,"QSSL","tmp");
 	K_SpeicherortSystemweit=EinstellungenSystem.fileName().left(EinstellungenSystem.fileName().lastIndexOf("/"))+"/Zertifikate.db";
@@ -36,11 +40,27 @@ QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObjec
 	qDebug("Ablageort des Zertifikatsspeichers:\r\n\tSystemweit:%s\r\n\tBenutzer:%s",K_SpeicherortSystemweit.toAscii().constData(),
 																					K_SpeicherortBenutzer.toAscii().constData());
 #endif
+//#endif
 	K_Speichergeladen=false;
 }
 
 void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 {
+	/*
+		Strucktur des Systemspeichers:
+		<Zertifikatsspeicher>
+			<CRL>
+					<Daten>Base64 Daten der 1. CRL</Daten>
+					.
+					.
+					<Daten>Base64 Daten der n. CRL</Daten>
+			</CRL>
+			<CA>
+					<Daten>Base64 Daten der 1. CA</Daten>
+					<Daten>Babe64 Daten der n. CA</Daten>
+			<CA>
+		</Zertifikatsspeicher>
+	*/
 	if(K_Speichergeladen)
 	{
 #ifndef QT_NO_DEBUG
@@ -49,6 +69,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 		emit Fehler(tr("Der Zertifikatsspeicher wurde bereits geladen"));
 		return;
 	}
+//#ifndef Q_WS_WIN
 	if(!passwort)
 	{
 		//Passwort für den Nutzerspeicher abfragen
@@ -60,8 +81,37 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 	QDomDocument* Speicher=new QDomDocument();
 	if(DateiSystem.exists())
 	{
+		if(!DateiSystem.open(QIODevice::ReadOnly))
+		{
 #ifndef QT_NO_DEBUG
-		qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
+			qWarning(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Systemspeicher konnte nicht geöffnet werden.","debug")));
+#endif
+			emit Warnung(tr("Der Zertifikatsspeicher des Systems konnte nicht gelesen werden."));
+		}
+		else
+		{
+			if(!Speicher->setContent(&DateiSystem))
+			{
+#ifndef QT_NO_DEBUG
+				qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Speicher des Systems beschädigt","debug")));
+#endif
+				emit Fehler(trUtf8("Der Zertifikatspeicher des Systems ist beschädigt."));
+				delete Speicher;
+				return;
+			}
+			else
+			{
+#ifndef QT_NO_DEBUG
+				qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
+				qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
+#endif
+			}
+		}
+	}
+	else
+	{
+#ifndef QT_NO_DEBUG
+		qDebug("QFrankSSLZertifikatspeicher Laden: kein Systemspeicher vorhanden.");
 #endif
 	}
 	if(DateiBenutzer.exists())
@@ -93,6 +143,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 #endif
 	}
 	delete Speicher;
+//#endif
 	K_Speichergeladen=true;
 }
 
