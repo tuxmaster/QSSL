@@ -22,6 +22,9 @@
 
 #include <QtCore>
 
+class QDomDocument;
+class QDomNode;
+
 class QFrankSSLZertifikatspeicher: public QObject
 {
 	Q_OBJECT
@@ -38,9 +41,13 @@ class QFrankSSLZertifikatspeicher: public QObject
 				void		PasswortFuerDenSpeicherHohlen()const;
 
 	private:
+				enum		Eintraege{CRL=0x00,CA=0x01,Zert=0x02};
+				Q_DECLARE_FLAGS(ArtDesEintrags,Eintraege)
 				QString		K_SpeicherortSystemweit;
 				QString		K_SpeicherortBenutzer;
 				bool		K_Speichergeladen;
+				bool		K_XMLBearbeiten(QDomDocument *xml);
+				bool		K_EintragBearbeiten(const QFrankSSLZertifikatspeicher::ArtDesEintrags &type,QDomNode *eintrag);
 				QString*	K_Passwort;
 };
 #endif

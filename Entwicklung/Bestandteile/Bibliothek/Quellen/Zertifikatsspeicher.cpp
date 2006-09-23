@@ -18,6 +18,8 @@
  */
 
 #include "Zertifikatsspeicher.h"
+#include <openssl/x509.h>
+#include <openssl/pem.h>
 
 //Den Filter brauchen wir nur unter nicht Windows Sytemen, da wir unter Windows den Systemeigenen nutzen.
 //#ifndef Q_WS_WIN
@@ -48,6 +50,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 {
 	/*
 		Strucktur des Systemspeichers:
+		<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 		<Zertifikatsspeicher>
 			<CRL>
 					<Daten>Base64 Daten der 1. CRL</Daten>
@@ -101,6 +104,15 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 			}
 			else
 			{
+				if(!K_XMLBearbeiten(Speicher))
+				{
+#ifndef QT_NO_DEBUG
+					qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Speicher des Systems beschädigt","debug")));
+#endif
+					emit Fehler(trUtf8("Der Zertifikatspeicher des Systems ist beschädigt."));
+					delete Speicher;
+					return;
+				}
 #ifndef QT_NO_DEBUG
 				qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
 				qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
@@ -145,6 +157,102 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 	delete Speicher;
 //#endif
 	K_Speichergeladen=true;
+}
+
+bool QFrankSSLZertifikatspeicher::K_XMLBearbeiten(QDomDocument *xml)
+{
+	QDomElement Root=xml->documentElement();
+	if(Root.tagName()!="Zertifikatsspeicher")
+	{
+#ifndef QT_NO_DEBUG
+		qCritical("QFrankSSLZertifikatspeicher XML bearbeiten: XML Objekt ist kein Zertifikatsspeicher");
+		qDebug("\t%s",qPrintable(Root.tagName()));
+#endif
+		return false;
+	}
+	//alle Einträge durchsuchen
+	QDomNode Eintrag=xml->namedItem("Zertifikatsspeicher").firstChild();
+	while (!Eintrag.isNull())
+	{
+		QDomElement Element=Eintrag.toElement();
+		//Was für ein Eintrag haben wir denn??
+		if(Element.tagName()=="CRL")
+		{
+#ifndef QT_NO_DEBUG
+			qDebug("Element CRL gefunden");
+#endif
+			//durchsuchen aller CRL's
+			if(!K_EintragBearbeiten(QFrankSSLZertifikatspeicher::CRL,&Eintrag.firstChild()))
+				return false;			
+		}
+		else if(Element.tagName()=="CA")
+		{
+#ifndef QT_NO_DEBUG
+			qDebug("Element CA gefunden");
+#endif
+			//durchsuchen aller CA's
+			if(!K_EintragBearbeiten(QFrankSSLZertifikatspeicher::CA,&Eintrag.firstChild()))
+				return false;		
+		}
+		Eintrag=Eintrag.nextSibling();
+	}
+	return true;
+}
+
+bool QFrankSSLZertifikatspeicher::K_EintragBearbeiten(const QFrankSSLZertifikatspeicher::ArtDesEintrags &type,QDomNode *eintrag)
+{
+	//Alle Einträge bearbeiten
+	BIO *Puffer = BIO_new(BIO_s_mem());
+	QByteArray DatenDesEintrags;
+	QDomElement Element;
+	X509 *Zertifikat;
+	while(!eintrag->isNull())
+	{
+		Element=eintrag->toElement();
+#ifndef QT_NO_DEBUG
+		qDebug(qPrintable(QString("Inhalt des Elements: %1").arg(Element.text())));
+#endif
+		DatenDesEintrags=QByteArray::fromBase64(Element.text().toAscii());
+		BIO_reset(Puffer);
+		Zertifikat=NULL;
+		if(BIO_write(Puffer,DatenDesEintrags.data(),DatenDesEintrags.size())!=DatenDesEintrags.size())
+			qFatal("K_EintragBearbeiten es wurde nicht alle Bytes in den OpenSSL Puffer geschrieben");
+		switch(type)
+		{
+			case QFrankSSLZertifikatspeicher::CRL:			
+													break;
+			case QFrankSSLZertifikatspeicher::CA:
+													if(!PEM_read_bio_X509(Puffer,&Zertifikat,0,NULL))
+													{
+#ifndef QT_NO_DEBUG
+														qDebug("CA konnte nicht gelesen werden");
+#endif													
+														break;
+													}
+#ifndef QT_NO_DEBUG
+													BIO_reset(Puffer);
+													if(X509_print(Puffer,Zertifikat)==1)
+													{
+														QByteArray Zerttext;
+														int Groesse=BIO_ctrl(Puffer,BIO_CTRL_PENDING,0,NULL);
+														Zerttext.resize(Groesse);
+														BIO_read(Puffer,Zerttext.data(),Groesse);
+														qDebug(qPrintable(QString("CA Element dekodiert: %1").arg(QString(Zerttext))));
+													}													
+#endif
+													break;
+			case QFrankSSLZertifikatspeicher::Zert:
+													break;
+			default:
+													qFatal(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Eintrag bearbeiten: unzulässiger Eintragstype","debug")));
+													break;
+		};
+		eintrag=&eintrag->nextSibling();
+		if(Zertifikat!=NULL)
+			X509_free(Zertifikat);
+	}
+	BIO_free(Puffer);
+	return true;
 }
 
 void QFrankSSLZertifikatspeicher::PasswortFuerDenSpeicher(QString* passwort)

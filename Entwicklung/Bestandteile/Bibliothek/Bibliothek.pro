@@ -33,10 +33,12 @@ unix{
 
 TRANSLATIONS	= Uebersetzungen/qssl_en.ts\
 				  Uebersetzungen/qssl_XX.ts
-
-HEADERS		= Quellen/Datenstromfilter.h\
-			  Quellen/Zertifikatsspeicher.h\ 
-			  Quellen/qssl.h
-SOURCES		= Quellen/Datenstromfilter.cpp\
-			  Quellen/Zertifikatsspeicher.cpp\
-			  Quellen/qssl.cpp 
+				  
+#!win32:HEADERS =Quellen/Datenstromfilter.h
+HEADERS		+= Quellen/Datenstromfilter.h\
+			   Quellen/Zertifikatsspeicher.h\ 
+			   Quellen/qssl.h
+#!win32:SOURCES =Quellen/Datenstromfilter.cpp
+SOURCES		+= Quellen/Datenstromfilter.cpp\
+			   Quellen/Zertifikatsspeicher.cpp\
+			   Quellen/qssl.cpp 
