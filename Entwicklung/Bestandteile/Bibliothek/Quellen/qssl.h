@@ -38,6 +38,10 @@ typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
 typedef struct bio_st BIO;
 
+//MMmmPP M=Major,m=minor,P=Patch
+#define QFRANKSSLVERSION 0x000100;
+#define QFRANKSSLVERSIONTEXT "0.1.0";
+
 class DLL_EXPORT QFrankSSL: public QTcpSocket
 {
 	Q_OBJECT
@@ -55,6 +59,8 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void								SSLVersionenFestlegen(const QFrankSSL::SSLVersion &sslVersion){K_ZuBenutzendeSSLVersionen=sslVersion;}
 				const QFrankSSL::SSLVersion&		SSLVersionen()const{return K_ZuBenutzendeSSLVersionen;}
 				const QStringList&					VerfuegbareAlgorithmen()const{return K_VerfuegbareAlgorithmen;}
+				static const QString				VersionText(){return QFRANKSSLVERSIONTEXT;}
+				static const quint32				Version(){return QFRANKSSLVERSION}
 
 	public slots:
 				void								DatenSenden(const QByteArray &daten);

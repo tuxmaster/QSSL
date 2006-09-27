@@ -112,11 +112,11 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 					emit Fehler(trUtf8("Der Zertifikatspeicher des Systems ist beschädigt."));
 					delete Speicher;
 					return;
-				}
+				}/*
 #ifndef QT_NO_DEBUG
 				qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
 				qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
-#endif
+#endif*/
 			}
 		}
 	}
@@ -206,6 +206,7 @@ bool QFrankSSLZertifikatspeicher::K_EintragBearbeiten(const QFrankSSLZertifikats
 	QByteArray DatenDesEintrags;
 	QDomElement Element;
 	X509 *Zertifikat;
+	X509_CRL *Rueckrufliste;
 	while(!eintrag->isNull())
 	{
 		Element=eintrag->toElement();
@@ -214,12 +215,20 @@ bool QFrankSSLZertifikatspeicher::K_EintragBearbeiten(const QFrankSSLZertifikats
 #endif
 		DatenDesEintrags=QByteArray::fromBase64(Element.text().toAscii());
 		BIO_reset(Puffer);
+		Rueckrufliste=NULL;
 		Zertifikat=NULL;
 		if(BIO_write(Puffer,DatenDesEintrags.data(),DatenDesEintrags.size())!=DatenDesEintrags.size())
 			qFatal("K_EintragBearbeiten es wurde nicht alle Bytes in den OpenSSL Puffer geschrieben");
 		switch(type)
 		{
-			case QFrankSSLZertifikatspeicher::CRL:			
+			case QFrankSSLZertifikatspeicher::CRL:
+													if(!PEM_read_bio_X509_CRL(Puffer,&Rueckrufliste,0,NULL))
+													{
+#ifndef QT_NO_DEBUG
+														qDebug("CRL konnte nicht gelesen werden");
+#endif	
+														break;
+													}
 													break;
 			case QFrankSSLZertifikatspeicher::CA:
 													if(!PEM_read_bio_X509(Puffer,&Zertifikat,0,NULL))
@@ -250,6 +259,8 @@ bool QFrankSSLZertifikatspeicher::K_EintragBearbeiten(const QFrankSSLZertifikats
 		eintrag=&eintrag->nextSibling();
 		if(Zertifikat!=NULL)
 			X509_free(Zertifikat);
+		if(Rueckrufliste!=NULL)
+			X509_CRL_free(Rueckrufliste);
 	}
 	BIO_free(Puffer);
 	return true;

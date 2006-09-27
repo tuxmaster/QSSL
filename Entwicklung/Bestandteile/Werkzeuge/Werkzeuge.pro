@@ -14,17 +14,16 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-TEMPLATE       =subdirs
+PROJEKTTEIL	= Werkzeuge
+TEMPLATE	= app
+include (../../Vorgaben.pri)
+TARGET		= qsslzertkonfig
+QT			-= gui
+LIBS		+= -lqssl -L$$DESTDIR
+INCLUDEPATH	+= ../Bibliothek/Quellen
 
-win32 {
-        PFAD = $$system(echo %CD%)
-	system(echo $$PFAD >$$(TMP)/x.x)
-}
-else {
-        PFAD = $$system(pwd)
-	system(echo $$PFAD >/tmp/x.x)
-}
-SUBDIRS		+=  Bestandteile/Bibliothek\
-				Bestandteile/Demo\
-				Bestandteile/Werkzeuge
-//!win32:SUBDIRS +=Bestandteile/Werkzeuge
+TRANSLATIONS	= Uebersetzungen/qsslkonfig_en.ts\
+				  Uebersetzungen/qsslkonfig_XX.ts
+
+win32:CONFIG +=console
+SOURCES		= Quellen/haupt.cpp
