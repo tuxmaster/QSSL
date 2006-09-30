@@ -24,7 +24,7 @@ INCLUDEPATH	+= ../Bibliothek/Quellen
 
 FORMS		= Dialoge/DemoBasis.ui
 
-HEADERS		= Quellen/DlgHaupt.h
+HEADERS		= Quellen/DemoDlgHaupt.h
 
-SOURCES		= Quellen/DlgHaupt.cpp\
+SOURCES		= Quellen/DemoDlgHaupt.cpp\
 			  Quellen/demo.cpp

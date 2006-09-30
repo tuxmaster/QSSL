@@ -19,7 +19,7 @@
 
 #include <QtGui>
 
-#include "DlgHaupt.h"
+#include "DemoDlgHaupt.h"
 #include <qssl.h>
 
 QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)

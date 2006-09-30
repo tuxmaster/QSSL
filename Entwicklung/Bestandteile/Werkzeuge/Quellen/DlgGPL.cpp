@@ -17,22 +17,20 @@
  *  
  */
 
+#include "DlgGPL.h"
 
-
-#include "DlgHaupt.h"
-
-int main(int anzahlArgumente, char *Argumente[]) 
+QFrankDlgGPL::QFrankDlgGPL(QWidget *eltern):QDialog(eltern)
 {
-	QApplication Programm(anzahlArgumente,Argumente);
-	QTranslator QtSystem;
-	QTranslator Meine;
-	// Ein Gruss an die Doku von Qt 4.1
-	QtSystem.load("qt_" + QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
-	Meine.load("qsslkonfig_"+QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
-	//Meine.load("qsslkonfig_en","bin");
-	Programm.installTranslator(&QtSystem);
-	Programm.installTranslator(&Meine);
-	QFrankZertkonfDlgHaupt Hauptdialog;
-	Hauptdialog.show();
-	return Programm.exec();
+	setWindowFlags(windowFlags()^Qt::WindowContextHelpButtonHint);
+	setupUi(this);
+	QDesktopWidget *Desktop = QApplication::desktop(); //neue X und Y Koordinate
+	int x=(Desktop->width()-this->width())/2;
+	int y=(Desktop->height()-this->height())/2;
+	//jetzt das Fenster verschieben
+	this->move(x,y);
+}
+
+void QFrankDlgGPL::LizenzTextSetzen(const QString &text)
+{
+	txtLizenz->setPlainText(text);
 }

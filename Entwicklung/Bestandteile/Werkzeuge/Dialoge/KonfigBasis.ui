@@ -1,0 +1,147 @@
+<ui version="4.0" >
+ <author>Frank Büttner</author>
+ <comment></comment>
+ <exportmacro></exportmacro>
+ <class>DlgKonfigBasis</class>
+ <widget class="QMainWindow" name="DlgKonfigBasis" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>348</width>
+    <height>353</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>QSSL Zertifikatspeicher konfigurations Werkzeug</string>
+  </property>
+  <widget class="QWidget" name="centralwidget" >
+   <widget class="QGroupBox" name="gruppeZertspeicher" >
+    <property name="geometry" >
+     <rect>
+      <x>110</x>
+      <y>100</y>
+      <width>123</width>
+      <height>88</height>
+     </rect>
+    </property>
+    <property name="title" >
+     <string>Zertifikatspeicher</string>
+    </property>
+    <widget class="QRadioButton" name="speicherSystem" >
+     <property name="geometry" >
+      <rect>
+       <x>20</x>
+       <y>20</y>
+       <width>83</width>
+       <height>18</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Systemweit</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="speicherNutzer" >
+     <property name="geometry" >
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>83</width>
+       <height>18</height>
+      </rect>
+     </property>
+     <property name="text" >
+      <string>Benutzer</string>
+     </property>
+     <property name="checked" >
+      <bool>true</bool>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QStatusBar" name="statusbar" />
+  <widget class="QMenuBar" name="Menueleiste" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>348</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_Hilfe" >
+    <property name="tearOffEnabled" >
+     <bool>false</bool>
+    </property>
+    <property name="title" >
+     <string>&amp;Hilfe</string>
+    </property>
+    <addaction name="Menuepunkt_ueber" />
+    <addaction name="Menuepunkt_ueberQt" />
+    <addaction name="Menuepunkt_GPL_Lizenz" />
+   </widget>
+   <widget class="QMenu" name="menu_Importieren" >
+    <property name="title" >
+     <string>&amp;Importieren</string>
+    </property>
+    <widget class="QMenu" name="menu_Zertifikate" >
+     <property name="title" >
+      <string>&amp;Zertifikate</string>
+     </property>
+     <addaction name="Menuepunkt_ZertifikatPEMkodiert" />
+     <addaction name="Menuepunkt_ZertifikatDERkodiert" />
+    </widget>
+    <widget class="QMenu" name="menu_Rueckruflisten" >
+     <property name="title" >
+      <string>&amp;Rückruflisten</string>
+     </property>
+     <addaction name="Menuepunkt_CRL_PEMkodiert" />
+     <addaction name="Menuepunkt_CRL_DERkodiert" />
+    </widget>
+    <addaction name="menu_Zertifikate" />
+    <addaction name="menu_Rueckruflisten" />
+   </widget>
+   <addaction name="menu_Importieren" />
+   <addaction name="menu_Hilfe" />
+  </widget>
+  <action name="Menuepunkt_ueber" >
+   <property name="text" >
+    <string>&amp;über</string>
+   </property>
+  </action>
+  <action name="Menuepunkt_ueberQt" >
+   <property name="text" >
+    <string>&amp;über Qt</string>
+   </property>
+  </action>
+  <action name="Menuepunkt_GPL_Lizenz" >
+   <property name="text" >
+    <string>GPL &amp;Lizenz </string>
+   </property>
+  </action>
+  <action name="Menuepunkt_ZertifikatPEMkodiert" >
+   <property name="text" >
+    <string>&amp;PEM kodiert</string>
+   </property>
+  </action>
+  <action name="Menuepunkt_ZertifikatDERkodiert" >
+   <property name="text" >
+    <string>&amp;DER kodiert</string>
+   </property>
+  </action>
+  <action name="Menuepunkt_CRL_PEMkodiert" >
+   <property name="text" >
+    <string>&amp;PEM kodiert</string>
+   </property>
+  </action>
+  <action name="Menuepunkt_CRL_DERkodiert" >
+   <property name="text" >
+    <string>&amp;DER kodiert</string>
+   </property>
+  </action>
+ </widget>
+ <pixmapfunction></pixmapfunction>
+ <includes/>
+ <resources/>
+ <connections/>
+</ui>

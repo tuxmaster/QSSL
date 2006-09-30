@@ -14,19 +14,23 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-PROJEKTTEIL	= Werkzeuge
-TEMPLATE	= app
+PROJEKTTEIL		= Werkzeuge
+TEMPLATE		= app
 include (../../Vorgaben.pri)
-TARGET		= qsslzertkonfig
-QT			-= gui
-LIBS		+= -lqssl -L$$DESTDIR
+QT				+= gui
+TARGET			= qsslzertkonfig
+LIBS			+= -lqssl -L$$DESTDIR
 
-RESOURCES	= Resourcen.qrc
+RESOURCES	 	= Resourcen.qrc
 
-INCLUDEPATH	+= ../Bibliothek/Quellen
+INCLUDEPATH		+= ../Bibliothek/Quellen
 
 TRANSLATIONS	= Uebersetzungen/qsslkonfig_en.ts\
 				  Uebersetzungen/qsslkonfig_XX.ts
-
-win32:CONFIG +=console
-SOURCES		= Quellen/haupt.cpp
+FORMS			= Dialoge/KonfigBasis.ui\
+				  Dialoge/GPLBasis.ui
+HEADERS			= Quellen/DlgGPL.h\
+				  Quellen/DlgHaupt.h
+SOURCES			= Quellen/DlgGPL.cpp\
+				  Quellen/DlgHaupt.cpp\
+				  Quellen/haupt.cpp

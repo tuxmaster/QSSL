@@ -18,7 +18,7 @@
  */
 
 #include <QtGui>
-#include "DlgHaupt.h"
+#include "DemoDlgHaupt.h"
 
 int main(int argc, char *argv[])
 {

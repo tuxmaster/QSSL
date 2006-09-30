@@ -17,22 +17,18 @@
  *  
  */
 
+#ifndef QFRANKDLGPL
+#define QFRANKDLGPL
 
+#include <QtGui>
+#include "ui_GPLBasis.h"
 
-#include "DlgHaupt.h"
-
-int main(int anzahlArgumente, char *Argumente[]) 
+class QFrankDlgGPL :public QDialog,private Ui::GPLBasis
 {
-	QApplication Programm(anzahlArgumente,Argumente);
-	QTranslator QtSystem;
-	QTranslator Meine;
-	// Ein Gruss an die Doku von Qt 4.1
-	QtSystem.load("qt_" + QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
-	Meine.load("qsslkonfig_"+QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
-	//Meine.load("qsslkonfig_en","bin");
-	Programm.installTranslator(&QtSystem);
-	Programm.installTranslator(&Meine);
-	QFrankZertkonfDlgHaupt Hauptdialog;
-	Hauptdialog.show();
-	return Programm.exec();
-}
+	Q_OBJECT
+	public:
+				QFrankDlgGPL(QWidget *eltern);
+				void	LizenzTextSetzen(const QString &text);
+};
+
+#endif

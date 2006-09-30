@@ -17,22 +17,27 @@
  *  
  */
 
+#ifndef QFRANKZERTKONFDLGHAUPT
+#define QFRANKZERTKONFDLGHAUPT
 
+#include <QtGui>
+#include "ui_KonfigBasis.h"
 
-#include "DlgHaupt.h"
-
-int main(int anzahlArgumente, char *Argumente[]) 
+class QFrankZertkonfDlgHaupt :public QMainWindow,private Ui::DlgKonfigBasis 
 {
-	QApplication Programm(anzahlArgumente,Argumente);
-	QTranslator QtSystem;
-	QTranslator Meine;
-	// Ein Gruss an die Doku von Qt 4.1
-	QtSystem.load("qt_" + QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
-	Meine.load("qsslkonfig_"+QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
-	//Meine.load("qsslkonfig_en","bin");
-	Programm.installTranslator(&QtSystem);
-	Programm.installTranslator(&Meine);
-	QFrankZertkonfDlgHaupt Hauptdialog;
-	Hauptdialog.show();
-	return Programm.exec();
-}
+	Q_OBJECT
+	public:
+			QFrankZertkonfDlgHaupt(QWidget *eltern=0);
+
+	private slots:
+
+			void	on_Menuepunkt_ZertifikatPEMkodiert_activated();
+			void	on_Menuepunkt_ZertifikatDERkodiert_activated();
+			void	on_Menuepunkt_CRL_PEMkodiert_activated();
+			void	on_Menuepunkt_CRL_DERkodiert_activated();
+			void	on_Menuepunkt_ueberQt_activated();
+			void	on_Menuepunkt_ueber_activated();
+			void	on_Menuepunkt_GPL_Lizenz_activated();
+};
+
+#endif
