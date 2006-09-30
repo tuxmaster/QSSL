@@ -20,6 +20,9 @@ include (../../Vorgaben.pri)
 TARGET		= qsslzertkonfig
 QT			-= gui
 LIBS		+= -lqssl -L$$DESTDIR
+
+RESOURCES	= Resourcen.qrc
+
 INCLUDEPATH	+= ../Bibliothek/Quellen
 
 TRANSLATIONS	= Uebersetzungen/qsslkonfig_en.ts\

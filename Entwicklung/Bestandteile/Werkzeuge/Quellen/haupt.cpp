@@ -19,6 +19,7 @@
 
 #include <QtCore>
 #include <qssl.h>
+#include <cstdio>
 
 int main(int anzahlArgumente, char *Argumente[]) 
 {
@@ -31,8 +32,55 @@ int main(int anzahlArgumente, char *Argumente[])
 	//Meine.load("qsslkonfig_en","bin");
 	Programm.installTranslator(&QtSystem);
 	Programm.installTranslator(&Meine);
-	qDebug(qPrintable(QObject::trUtf8("QSSL Zertifikatsspeicher Konfiguration Version %1, Urheberrecht(©) 2006 Frank Büttner.").arg(QFrankSSL::VersionText())));
-	qDebug(qPrintable(QObject::tr("QSSL Zertifikatsspeicher Konfiguration wird OHNE JEGLICHE GARANTIE bereitgestellt.\r\nWeitere Hinweise unter dem Punkt L.")));
-	qDebug(qPrintable(QObject::trUtf8("Dies ist freie Software, Sie können sie unter Beachtung der GPL Lizenz weitergeben.")));
+	QFile Lizenzdatei(":/Lizenz.txt");
+	bool Ende=false;
+	while(!Ende)
+	{
+		printf(qPrintable(QObject::trUtf8("QSSL Zertifikatsspeicher Konfiguration Version %1, Urheberrecht(©) 2006 Frank Büttner.").
+											arg(QFrankSSL::VersionText())));
+		printf("\r\n");
+		printf(qPrintable(QObject::tr("QSSL Zertifikatsspeicher Konfiguration wird OHNE JEGLICHE GARANTIE bereitgestellt.\r\n"
+									  "Weitere Hinweise unter dem Punkt l.")));
+		printf("\r\n");
+		printf(qPrintable(QObject::trUtf8("Dies ist freie Software, Sie können sie unter Beachtung der GPL Lizenz weitergeben.\r\n"
+										  "Diese Anwendung benutzt die OpenSSL Bibliothek.")));
+		printf("\r\n");
+		printf(qPrintable(QObject::trUtf8("Bitte wählen Sie die gewünschte Funktions aus:\r\nl - Lizenz anzeigen\r\nz - PEM kodiertes Zertifikat importieren"
+										  "\r\nZ - DER kodiertes Zertifikat importieren\r\nr - PEM kodierte CRL importieren"
+										  "\r\nR - DER kodierte CRL importieren\r\nb - beenden")));
+		printf("\r\n");
+		printf(qPrintable(QObject::tr("Auswahl>")));
+		int Zeile=0;
+		switch(getchar())
+		{
+			case 'l':
+						if(!Lizenzdatei.open(QIODevice::ReadOnly|QIODevice::Text))
+							qFatal("Programmresourcen sind schrott.");
+						while(!Lizenzdatei.atEnd())
+						{
+							if(Zeile==25)
+							{
+								printf(qPrintable(QObject::trUtf8("Eingabetaste drücken zum fortfahren.")));
+								printf("\r\n");
+								Zeile=0;
+								getchar();
+								fflush(stdin);
+							}
+							printf(qPrintable(QString(Lizenzdatei.readLine(60000))));
+							Zeile++;
+						}							
+						Lizenzdatei.close();
+						fflush(stdin);
+						break;
+			case 'b':
+						Ende=true; 
+						break;
+			default:
+						printf(qPrintable(QObject::trUtf8("ungültige Eingabe")));
+						printf("\r\n");
+						fflush(stdin);
+						break;
+		}
+	}
 	return 0;
 }

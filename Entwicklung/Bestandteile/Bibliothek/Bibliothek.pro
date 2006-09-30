@@ -23,8 +23,8 @@ VERSION		= 0.1.0
 TARGET		= qssl
 win32{
 	DEFINES		+= DLL_BAUEN	
-	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8c/include
-	LIBS		+= -L../../../../../OpenSSL/0.9.8c/lib -lssleay32 -llibeay32
+	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8d/include
+	LIBS		+= -L../../../../../OpenSSL/0.9.8d/lib -lssleay32 -llibeay32
 }
 unix{
 	INCLUDEPATH	+= /usr/include
