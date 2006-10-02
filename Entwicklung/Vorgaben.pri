@@ -40,6 +40,7 @@ contains(Debuginfos, ja) {
 	message(Erstelle $$PROJEKTTEIL mit Debugmeldungen)
 	CONFIG	 -= release
 	CONFIG	 += debug
+	win32:CONFIG += console
 
 }
 contains(Strip, ja) {

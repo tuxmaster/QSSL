@@ -1,5 +1,40 @@
 <!DOCTYPE TS><TS>
 <context>
+    <name>DlgDateiauswahlBasis</name>
+    <message>
+        <source>Dialog</source>
+        <translation></translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Bitte die Datei auswählen oder in das Zielfeld ziehen und auf OK klicken.</source>
+        <translation>Please select the file or drop it into the target field and press ok.</translation>
+    </message>
+    <message>
+        <source>Datei:</source>
+        <translation>File:</translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Für ein Dateiauswahldialog hier klicken.</source>
+        <translation>Click here, for an file select dialog.</translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation>...</translation>
+    </message>
+    <message>
+        <source>Hier die Datei reinziehen.</source>
+        <translation>Drop the file here.</translation>
+    </message>
+    <message>
+        <source>Abbrechen</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+</context>
+<context>
     <name>DlgKonfigBasis</name>
     <message>
         <source>QSSL Zertifikatspeicher konfigurations Werkzeug</source>

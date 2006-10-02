@@ -28,9 +28,14 @@ INCLUDEPATH		+= ../Bibliothek/Quellen
 TRANSLATIONS	= Uebersetzungen/qsslkonfig_en.ts\
 				  Uebersetzungen/qsslkonfig_XX.ts
 FORMS			= Dialoge/KonfigBasis.ui\
-				  Dialoge/GPLBasis.ui
+				  Dialoge/GPLBasis.ui\
+				  Dialoge/DateiauswahlBasis.ui
 HEADERS			= Quellen/DlgGPL.h\
+				  Quellen/Ereignisfilter.h\
+				  Quellen/DlgDateiauswahl.h\
 				  Quellen/DlgHaupt.h
 SOURCES			= Quellen/DlgGPL.cpp\
+				  Quellen/Ereignisfilter.cpp\
+				  Quellen/DlgDateiauswahl.cpp\
 				  Quellen/DlgHaupt.cpp\
 				  Quellen/haupt.cpp

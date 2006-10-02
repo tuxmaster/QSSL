@@ -30,5 +30,4 @@ class QFrankDlgGPL :public QDialog,private Ui::GPLBasis
 				QFrankDlgGPL(QWidget *eltern);
 				void	LizenzTextSetzen(const QString &text);
 };
-
 #endif

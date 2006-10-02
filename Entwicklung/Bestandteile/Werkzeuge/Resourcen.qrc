@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
 	<file alias="Lizenz.txt">../../Lizenz.txt</file>
+	<file>Bilder/Zielscheibe.png</file>
 </qresource>
  </RCC>

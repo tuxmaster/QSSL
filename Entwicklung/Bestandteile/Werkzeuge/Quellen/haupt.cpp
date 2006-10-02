@@ -17,8 +17,6 @@
  *  
  */
 
-
-
 #include "DlgHaupt.h"
 
 int main(int anzahlArgumente, char *Argumente[]) 

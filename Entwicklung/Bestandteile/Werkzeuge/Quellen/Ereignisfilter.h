@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006 Frank BÃ¼ttner frank-buettner@gmx.net
+ *  Copyright (C) 2006 Frank Büttner frank-buettner@gmx.net
  * 
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -17,26 +17,16 @@
  *  
  */
 
-#ifndef QFRANKZERTKONFDLGHAUPT
-#define QFRANKZERTKONFDLGHAUPT
+#ifndef QFRANKZERTKONFDLGEREIGNISFILTER
+#define QFRANKZERTKONFDLGEREIGNISFILTER
 
 #include <QtGui>
-#include "ui_KonfigBasis.h"
 
-class QFrankZertkonfDlgHaupt :public QMainWindow,private Ui::DlgKonfigBasis 
+class QFrankZertkonfEreignisfilter: public QObject
 {
 	Q_OBJECT
 	public:
-			QFrankZertkonfDlgHaupt(QWidget *eltern=0);
-
-	private slots:
-
-			void	on_Menuepunkt_ZertifikatPEMkodiert_triggered();
-			void	on_Menuepunkt_ZertifikatDERkodiert_triggered();
-			void	on_Menuepunkt_CRL_PEMkodiert_triggered();
-			void	on_Menuepunkt_CRL_DERkodiert_triggered();
-			void	on_Menuepunkt_ueberQt_triggered();
-			void	on_Menuepunkt_ueber_triggered();
-			void	on_Menuepunkt_GPL_Lizenz_triggered();
+			QFrankZertkonfEreignisfilter(QObject* eltern);
+			bool eventFilter(QObject *wer, QEvent *was);
 };
 #endif

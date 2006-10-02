@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006 Frank BÃ¼ttner frank-buettner@gmx.net
+ *  Copyright (C) 2006 Frank Büttner frank-buettner@gmx.net
  * 
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -17,12 +17,15 @@
  *  
  */
 
-#include "DlgGPL.h"
+#include "DlgDateiauswahl.h"
+#include "Ereignisfilter.h"
 
-QFrankDlgGPL::QFrankDlgGPL(QWidget *eltern):QDialog(eltern)
+QFrankZertkonfDlgDateiauswahl::QFrankZertkonfDlgDateiauswahl(QWidget* eltern):QDialog(eltern)
 {
 	setWindowFlags(windowFlags()^Qt::WindowContextHelpButtonHint);
 	setupUi(this);
+	QFrankZertkonfEreignisfilter *Filter=new QFrankZertkonfEreignisfilter(this);
+	sZiehflaeche->installEventFilter(Filter);
 	QDesktopWidget *Desktop = QApplication::desktop(); //neue X und Y Koordinate
 	int x=(Desktop->width()-this->width())/2;
 	int y=(Desktop->height()-this->height())/2;
@@ -30,7 +33,7 @@ QFrankDlgGPL::QFrankDlgGPL(QWidget *eltern):QDialog(eltern)
 	this->move(x,y);
 }
 
-void QFrankDlgGPL::LizenzTextSetzen(const QString &text)
+void QFrankZertkonfDlgDateiauswahl::DateiAngekommen(const QString datei)
 {
-	txtLizenz->setPlainText(text);
+	QMessageBox::information(this,"Drop angekommen",datei,QMessageBox::Ok,QMessageBox::NoButton);
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006 Frank BÃ¼ttner frank-buettner@gmx.net
+ *  Copyright (C) 2006 Frank Büttner frank-buettner@gmx.net
  * 
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -17,26 +17,20 @@
  *  
  */
 
-#ifndef QFRANKZERTKONFDLGHAUPT
-#define QFRANKZERTKONFDLGHAUPT
+#ifndef QFRANKZERTKONFDLGDATEIAUSWAHL
+#define QFRANKZERTKONFDLGDATEIAUSWAHL
 
 #include <QtGui>
-#include "ui_KonfigBasis.h"
+#include "ui_DateiauswahlBasis.h"
 
-class QFrankZertkonfDlgHaupt :public QMainWindow,private Ui::DlgKonfigBasis 
+class QFrankZertkonfDlgDateiauswahl:public QDialog,private Ui::DlgDateiauswahlBasis
 {
 	Q_OBJECT
 	public:
-			QFrankZertkonfDlgHaupt(QWidget *eltern=0);
+				QFrankZertkonfDlgDateiauswahl(QWidget* eltern);
 
 	private slots:
-
-			void	on_Menuepunkt_ZertifikatPEMkodiert_triggered();
-			void	on_Menuepunkt_ZertifikatDERkodiert_triggered();
-			void	on_Menuepunkt_CRL_PEMkodiert_triggered();
-			void	on_Menuepunkt_CRL_DERkodiert_triggered();
-			void	on_Menuepunkt_ueberQt_triggered();
-			void	on_Menuepunkt_ueber_triggered();
-			void	on_Menuepunkt_GPL_Lizenz_triggered();
+				void DateiAngekommen(const QString datei);
 };
+
 #endif

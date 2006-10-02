@@ -19,6 +19,7 @@
 
 #include "DlgHaupt.h"
 #include "DlgGPL.h"
+#include "DlgDateiauswahl.h"
 #include <qssl.h>
 
 QFrankZertkonfDlgHaupt::QFrankZertkonfDlgHaupt(QWidget *eltern):QMainWindow(eltern)
@@ -31,27 +32,29 @@ QFrankZertkonfDlgHaupt::QFrankZertkonfDlgHaupt(QWidget *eltern):QMainWindow(elte
 	this->move(x,y);
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikatPEMkodiert_activated()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikatPEMkodiert_triggered()
 {
-	QMessageBox::critical(this,"nicht geschrieben","ZertifikatPEMkodiert",QMessageBox::Ok,QMessageBox::NoButton);
+	QFrankZertkonfDlgDateiauswahl Dialog(this);
+	Dialog.exec();
+	//QMessageBox::critical(this,"nicht geschrieben","ZertifikatPEMkodiert",QMessageBox::Ok,QMessageBox::NoButton);
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikatDERkodiert_activated()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikatDERkodiert_triggered()
 {
 	QMessageBox::critical(this,"nicht geschrieben","ZertifikatDERkodiert",QMessageBox::Ok,QMessageBox::NoButton);
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_PEMkodiert_activated()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_PEMkodiert_triggered()
 {
 	QMessageBox::critical(this,"nicht geschrieben","CRL_PEMkodiert",QMessageBox::Ok,QMessageBox::NoButton);
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_DERkodiert_activated()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_DERkodiert_triggered()
 {
 	QMessageBox::critical(this,"nicht geschrieben","CRL_DERkodiert",QMessageBox::Ok,QMessageBox::NoButton);
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_activated()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_triggered()
 {
 	QFile Lizenzdatei(":/Lizenz.txt");
 	if(!Lizenzdatei.open(QIODevice::ReadOnly|QIODevice::Text))
@@ -62,7 +65,7 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_activated()
 	Lizenzdatei.close();
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_ueber_activated()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_ueber_triggered()
 {
 	QMessageBox::about(this,trUtf8("Über QSSL konfig"),trUtf8("QSSL Zertifikatsspeicher Konfiguration Version %1, Urheberrecht(©) 2006 Frank Büttner.\r\n"
 															  "QSSL Zertifikatsspeicher Konfiguration wird OHNE JEGLICHE GARANTIE bereitgestellt.\r\n"
@@ -71,7 +74,7 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_ueber_activated()
 															  "Diese Anwendung benutzt die OpenSSL Bibliothek.").arg(QFrankSSL::VersionText()));
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_ueberQt_activated()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_ueberQt_triggered()
 {
 	QMessageBox::aboutQt(this);
 }
