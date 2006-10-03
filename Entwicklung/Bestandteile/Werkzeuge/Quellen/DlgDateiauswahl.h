@@ -27,10 +27,19 @@ class QFrankZertkonfDlgDateiauswahl:public QDialog,private Ui::DlgDateiauswahlBa
 {
 	Q_OBJECT
 	public:
-				QFrankZertkonfDlgDateiauswahl(QWidget* eltern);
+				enum			TypeDerDatei{ZERTPEM=0x00,ZERTDER=0x01,CRLPEM=0x02,CRLDER=0x03};
+				Q_DECLARE_FLAGS(Dateitype,TypeDerDatei)
+				QFrankZertkonfDlgDateiauswahl(QWidget* eltern,const QFrankZertkonfDlgDateiauswahl::Dateitype &dateitype);
+				void			TitelSetzen(const QString &titel);
+				const QString	Datei()const{return txtDatei->text();}
+
+	private:
+				QFrankZertkonfDlgDateiauswahl::Dateitype	K_Dateitype;
 
 	private slots:
-				void DateiAngekommen(const QString datei);
+				void			DateiAngekommen(const QString datei);
+				void			on_sfDateiauswahl_clicked();
+				void			on_sfOK_clicked();
 };
 
 #endif

@@ -34,24 +34,35 @@ QFrankZertkonfDlgHaupt::QFrankZertkonfDlgHaupt(QWidget *eltern):QMainWindow(elte
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikatPEMkodiert_triggered()
 {
-	QFrankZertkonfDlgDateiauswahl Dialog(this);
-	Dialog.exec();
-	//QMessageBox::critical(this,"nicht geschrieben","ZertifikatPEMkodiert",QMessageBox::Ok,QMessageBox::NoButton);
+	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::ZERTPEM);
+	Dialog.TitelSetzen(tr("Zertifikat PEM kodiert"));
+	if(Dialog.exec()==QDialog::Rejected)
+		return;
+	QMessageBox::information(this,"",Dialog.Datei(),QMessageBox::Ok);
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikatDERkodiert_triggered()
 {
-	QMessageBox::critical(this,"nicht geschrieben","ZertifikatDERkodiert",QMessageBox::Ok,QMessageBox::NoButton);
+	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::ZERTDER);
+	Dialog.TitelSetzen(tr("Zertifikat DER kodiert"));
+	if(Dialog.exec()==QDialog::Rejected)
+		return;
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_PEMkodiert_triggered()
 {
-	QMessageBox::critical(this,"nicht geschrieben","CRL_PEMkodiert",QMessageBox::Ok,QMessageBox::NoButton);
+	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::CRLPEM);
+	Dialog.TitelSetzen(trUtf8("Rückrufliste PEM kodiert"));
+	if(Dialog.exec()==QDialog::Rejected)
+		return;
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_DERkodiert_triggered()
 {
-	QMessageBox::critical(this,"nicht geschrieben","CRL_DERkodiert",QMessageBox::Ok,QMessageBox::NoButton);
+	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::CRLDER);
+	Dialog.TitelSetzen(trUtf8("Rückrufliste DER kodiert"));
+	if(Dialog.exec()==QDialog::Rejected)
+		return;
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_triggered()

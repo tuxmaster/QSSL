@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006 Frank B�ttner frank-buettner@gmx.net
+ *  Copyright (C) 2006 Frank Büttner frank-buettner@gmx.net
  * 
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -20,7 +20,7 @@
 #include "DlgDateiauswahl.h"
 #include "Ereignisfilter.h"
 
-QFrankZertkonfDlgDateiauswahl::QFrankZertkonfDlgDateiauswahl(QWidget* eltern):QDialog(eltern)
+QFrankZertkonfDlgDateiauswahl::QFrankZertkonfDlgDateiauswahl(QWidget* eltern,const QFrankZertkonfDlgDateiauswahl::Dateitype &dateitype):QDialog(eltern)
 {
 	setWindowFlags(windowFlags()^Qt::WindowContextHelpButtonHint);
 	setupUi(this);
@@ -31,9 +31,51 @@ QFrankZertkonfDlgDateiauswahl::QFrankZertkonfDlgDateiauswahl(QWidget* eltern):QD
 	int y=(Desktop->height()-this->height())/2;
 	//jetzt das Fenster verschieben
 	this->move(x,y);
+	K_Dateitype=dateitype;
+}
+
+void QFrankZertkonfDlgDateiauswahl::on_sfDateiauswahl_clicked()
+{
+	QString Filter;
+	switch(K_Dateitype)
+	{
+		case QFrankZertkonfDlgDateiauswahl::ZERTPEM:
+														Filter=tr("Zertifikat (*.pem *.cer)");
+														break;
+		case QFrankZertkonfDlgDateiauswahl::ZERTDER:
+														Filter=tr("Zertifikat (*.der *.cer)");
+														break;
+		case QFrankZertkonfDlgDateiauswahl::CRLPEM:
+		case QFrankZertkonfDlgDateiauswahl::CRLDER:
+														Filter=trUtf8("Rückrufliste (*.crl)");
+														break;
+		default:
+														qFatal("Falscher Dateitype");
+														break;
+	}
+	QString Datei=QFileDialog::getOpenFileName(this,trUtf8("Bitte die Datei auswählen"),QString(),Filter);
+	if(Datei.isNull())
+		return;
+	DateiAngekommen(Datei);
+}
+
+void QFrankZertkonfDlgDateiauswahl::on_sfOK_clicked()
+{
+	if(txtDatei->text().isEmpty())
+	{
+		QMessageBox::warning(this,tr("Fehler"),tr("Das Feld Dateiname darf nicht leer sein."),QMessageBox::Ok,QMessageBox::NoButton);
+		return;
+	}
+	else
+		this->accept();
+}
+
+void QFrankZertkonfDlgDateiauswahl::TitelSetzen(const QString &titel)
+{
+	this->setWindowTitle(titel);
 }
 
 void QFrankZertkonfDlgDateiauswahl::DateiAngekommen(const QString datei)
 {
-	QMessageBox::information(this,"Drop angekommen",datei,QMessageBox::Ok,QMessageBox::NoButton);
+	txtDatei->setText(datei);
 }
