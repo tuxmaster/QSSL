@@ -8,55 +8,51 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>427</width>
-    <height>135</height>
+    <width>388</width>
+    <height>175</height>
    </rect>
   </property>
   <property name="windowTitle" >
    <string>QSSL Zertifikatspeicher konfigurations Werkzeug</string>
   </property>
   <widget class="QWidget" name="centralwidget" >
-   <layout class="QGridLayout" >
+   <layout class="QVBoxLayout" >
     <property name="margin" >
      <number>9</number>
     </property>
     <property name="spacing" >
      <number>6</number>
     </property>
-    <item row="0" column="0" >
+    <item>
      <widget class="QGroupBox" name="gruppeZertspeicher" >
       <property name="title" >
        <string>Zertifikatspeicher</string>
       </property>
-      <widget class="QRadioButton" name="speicherSystem" >
-       <property name="geometry" >
-        <rect>
-         <x>20</x>
-         <y>20</y>
-         <width>83</width>
-         <height>18</height>
-        </rect>
+      <layout class="QVBoxLayout" >
+       <property name="margin" >
+        <number>9</number>
        </property>
-       <property name="text" >
-        <string>Systemweit</string>
+       <property name="spacing" >
+        <number>6</number>
        </property>
-      </widget>
-      <widget class="QRadioButton" name="speicherNutzer" >
-       <property name="geometry" >
-        <rect>
-         <x>20</x>
-         <y>50</y>
-         <width>83</width>
-         <height>18</height>
-        </rect>
-       </property>
-       <property name="text" >
-        <string>Benutzer</string>
-       </property>
-       <property name="checked" >
-        <bool>true</bool>
-       </property>
-      </widget>
+       <item>
+        <widget class="QRadioButton" name="speicherSystem" >
+         <property name="text" >
+          <string>Systemweit</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="speicherNutzer" >
+         <property name="text" >
+          <string>Benutzer</string>
+         </property>
+         <property name="checked" >
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
@@ -67,21 +63,10 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>427</width>
-     <height>21</height>
+     <width>388</width>
+     <height>30</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu_Hilfe" >
-    <property name="tearOffEnabled" >
-     <bool>false</bool>
-    </property>
-    <property name="title" >
-     <string>&amp;Hilfe</string>
-    </property>
-    <addaction name="Menuepunkt_ueber" />
-    <addaction name="Menuepunkt_ueberQt" />
-    <addaction name="Menuepunkt_GPL_Lizenz" />
-   </widget>
    <widget class="QMenu" name="menu_Importieren" >
     <property name="title" >
      <string>&amp;Importieren</string>
@@ -102,6 +87,17 @@
     </widget>
     <addaction name="menu_Zertifikate" />
     <addaction name="menu_Rueckruflisten" />
+   </widget>
+   <widget class="QMenu" name="menu_Hilfe" >
+    <property name="tearOffEnabled" >
+     <bool>false</bool>
+    </property>
+    <property name="title" >
+     <string>&amp;Hilfe</string>
+    </property>
+    <addaction name="Menuepunkt_ueber" />
+    <addaction name="Menuepunkt_ueberQt" />
+    <addaction name="Menuepunkt_GPL_Lizenz" />
    </widget>
    <addaction name="menu_Importieren" />
    <addaction name="menu_Hilfe" />

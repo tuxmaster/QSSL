@@ -101,6 +101,33 @@
     </message>
 </context>
 <context encoding="UTF-8">
+    <name>QFrankZertkonfDlgDateiauswahl</name>
+    <message>
+        <source>Zertifikat (*.pem *.cer)</source>
+        <translation>Certificate (*.pem *.cer)</translation>
+    </message>
+    <message>
+        <source>Zertifikat (*.der *.cer)</source>
+        <translation>Certificate (*.der *.cer)</translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Rückrufliste (*.crl)</source>
+        <translation>Revokelist (*.crl)</translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Bitte die Datei auswählen</source>
+        <translation>Please chose an file</translation>
+    </message>
+    <message>
+        <source>Fehler</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <source>Das Feld Dateiname darf nicht leer sein.</source>
+        <translation>The filed must be filled.</translation>
+    </message>
+</context>
+<context encoding="UTF-8">
     <name>QFrankZertkonfDlgHaupt</name>
     <message encoding="UTF-8">
         <source>Über QSSL konfig</source>
@@ -117,6 +144,22 @@ QSSL certificate storage config tool comes with ABSOLUTELY NO WARRANTY.
 See licence for more information.
 This is free software, and you are welcome to redistribute it under the GPL conditions.
 This application use the OpenSSL library.</translation>
+    </message>
+    <message>
+        <source>Zertifikat PEM kodiert</source>
+        <translation>Certifikate PEM coded</translation>
+    </message>
+    <message>
+        <source>Zertifikat DER kodiert</source>
+        <translation>Certifikate DER coded</translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Rückrufliste PEM kodiert</source>
+        <translation>Revokelist PEM coded</translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Rückrufliste DER kodiert</source>
+        <translation>Revokelist DER coded</translation>
     </message>
 </context>
 </TS>

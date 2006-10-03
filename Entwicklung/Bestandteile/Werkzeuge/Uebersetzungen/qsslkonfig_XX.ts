@@ -101,6 +101,33 @@
     </message>
 </context>
 <context encoding="UTF-8">
+    <name>QFrankZertkonfDlgDateiauswahl</name>
+    <message>
+        <source>Zertifikat (*.pem *.cer)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Zertifikat (*.der *.cer)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Rückrufliste (*.crl)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Bitte die Datei auswählen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fehler</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Das Feld Dateiname darf nicht leer sein.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context encoding="UTF-8">
     <name>QFrankZertkonfDlgHaupt</name>
     <message encoding="UTF-8">
         <source>Über QSSL konfig</source>
@@ -112,6 +139,22 @@ QSSL Zertifikatsspeicher Konfiguration wird OHNE JEGLICHE GARANTIE bereitgestell
 Weitere Hinweise entnehmen Sie bitte der Lizenz
 Dies ist freie Software, Sie können sie unter Beachtung der GPL Lizenz weitergeben.
 Diese Anwendung benutzt die OpenSSL Bibliothek.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Zertifikat PEM kodiert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Zertifikat DER kodiert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Rückrufliste PEM kodiert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Rückrufliste DER kodiert</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
