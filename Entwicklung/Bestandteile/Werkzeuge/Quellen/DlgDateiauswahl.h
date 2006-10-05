@@ -27,7 +27,7 @@ class QFrankZertkonfDlgDateiauswahl:public QDialog,private Ui::DlgDateiauswahlBa
 {
 	Q_OBJECT
 	public:
-				enum			TypeDerDatei{ZERTPEM=0x00,ZERTDER=0x01,CRLPEM=0x02,CRLDER=0x03};
+				enum			TypeDerDatei{ZERT=0x00,CRL=0x01};
 				Q_DECLARE_FLAGS(Dateitype,TypeDerDatei)
 				QFrankZertkonfDlgDateiauswahl(QWidget* eltern,const QFrankZertkonfDlgDateiauswahl::Dateitype &dateitype);
 				void			TitelSetzen(const QString &titel);

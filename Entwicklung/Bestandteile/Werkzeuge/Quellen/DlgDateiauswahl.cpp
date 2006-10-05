@@ -39,14 +39,10 @@ void QFrankZertkonfDlgDateiauswahl::on_sfDateiauswahl_clicked()
 	QString Filter;
 	switch(K_Dateitype)
 	{
-		case QFrankZertkonfDlgDateiauswahl::ZERTPEM:
-														Filter=tr("Zertifikat (*.pem *.cer)");
-														break;
-		case QFrankZertkonfDlgDateiauswahl::ZERTDER:
-														Filter=tr("Zertifikat (*.der *.cer)");
-														break;
-		case QFrankZertkonfDlgDateiauswahl::CRLPEM:
-		case QFrankZertkonfDlgDateiauswahl::CRLDER:
+		case QFrankZertkonfDlgDateiauswahl::ZERT:
+														Filter=tr("Zertifikat (*.pem *.der *.cer)");
+														break;		
+		case QFrankZertkonfDlgDateiauswahl::CRL:
 														Filter=trUtf8("Rückrufliste (*.crl)");
 														break;
 		default:

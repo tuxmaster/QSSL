@@ -30,39 +30,34 @@ QFrankZertkonfDlgHaupt::QFrankZertkonfDlgHaupt(QWidget *eltern):QMainWindow(elte
 	int y=(Desktop->height()-this->height())/2;
 	//jetzt das Fenster verschieben
 	this->move(x,y);
+	K_SpeicherortGruppe=new QButtonGroup(this);
+	K_SpeicherortGruppe->addButton(speicherNutzer,1);
+	K_SpeicherortGruppe->addButton(speicherSystem,0);
+	SSLSystem=new QFrankSSL(this);
+	connect(K_SpeicherortGruppe,SIGNAL(buttonClicked(int)),this,SLOT(K_SpeicherortGeaendert(const int&)));
+	connect(SSLSystem->Zertifikatsspeicher(),SIGNAL(Fehler(const QString&)),this,SLOT(K_Fehler(const QString&)));	
+	K_Speicherort=QFrankSSLZertifikatspeicher::Nutzer;
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikatPEMkodiert_triggered()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_Zertifikat_triggered()
 {
-	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::ZERTPEM);
-	Dialog.TitelSetzen(tr("Zertifikat PEM kodiert"));
+	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::ZERT);
+	Dialog.TitelSetzen(tr("Zertifikat importieren"));
 	if(Dialog.exec()==QDialog::Rejected)
 		return;
-	QMessageBox::information(this,"",Dialog.Datei(),QMessageBox::Ok);
+	SSLSystem->Zertifikatsspeicher()->ZertifikatSpeichern((QFrankSSLZertifikatspeicher::Speicherort)K_Speicherort,QFrankSSLZertifikatspeicher::CA,
+														  QFile(Dialog.Datei()));
 }
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikatDERkodiert_triggered()
-{
-	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::ZERTDER);
-	Dialog.TitelSetzen(tr("Zertifikat DER kodiert"));
-	if(Dialog.exec()==QDialog::Rejected)
-		return;
-}
 
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_PEMkodiert_triggered()
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_triggered()
 {
-	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::CRLPEM);
-	Dialog.TitelSetzen(trUtf8("Rückrufliste PEM kodiert"));
+	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::CRL);
+	Dialog.TitelSetzen(trUtf8("Rückrufliste importieren"));
 	if(Dialog.exec()==QDialog::Rejected)
 		return;
-}
-
-void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_DERkodiert_triggered()
-{
-	QFrankZertkonfDlgDateiauswahl Dialog(this,QFrankZertkonfDlgDateiauswahl::CRLDER);
-	Dialog.TitelSetzen(trUtf8("Rückrufliste DER kodiert"));
-	if(Dialog.exec()==QDialog::Rejected)
-		return;
+	SSLSystem->Zertifikatsspeicher()->ZertifikatSpeichern((QFrankSSLZertifikatspeicher::Speicherort)K_Speicherort,QFrankSSLZertifikatspeicher::CRL,
+														  QFile(Dialog.Datei()));
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_triggered()
@@ -74,6 +69,37 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_triggered()
 	Dialog.LizenzTextSetzen(QString(Lizenzdatei.readAll()));
 	Dialog.exec();
 	Lizenzdatei.close();
+}
+
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikateAnzeigen_triggered()
+{
+	QMessageBox::information(this,"Testliste für Zerts",SSLSystem->Zertifikatsspeicher()->ListeAllerZertifikate(QFrankSSLZertifikatspeicher::CA).join(","));
+							
+}
+
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_RueckruflistenAnzeigen_triggered()
+{
+}
+
+void QFrankZertkonfDlgHaupt::K_Fehler(const QString &fehler)
+{
+	QMessageBox::critical(this,tr("Fehler"),tr("Folgener Fehler ist aufgetreten:\r\n%1").arg(fehler));
+}
+
+void QFrankZertkonfDlgHaupt::K_SpeicherortGeaendert(const int &aktiv)
+{
+	switch(aktiv)
+	{
+		case 0:
+				K_Speicherort=QFrankSSLZertifikatspeicher::System;
+				break;
+		case 1:
+				K_Speicherort=QFrankSSLZertifikatspeicher::Nutzer;
+				break;
+		default:
+				qFatal("FrankZertkonfDlgHaupt SpeicherortGeaendert nicht definierter Speicherort");
+				break;
+	}
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_ueber_triggered()

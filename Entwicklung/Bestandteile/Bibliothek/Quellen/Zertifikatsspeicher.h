@@ -22,32 +22,50 @@
 
 #include <QtCore>
 
+//Unter Windows  braucht man Hilfe beim Exportieren
+#ifdef Q_WS_WIN 
+	#ifdef DLL_BAUEN
+		#define DLL_EXPORT __declspec(dllexport)
+	#else
+		#define DLL_EXPORT __declspec(dllimport)
+	#endif
+#else
+		#define DLL_EXPORT
+#endif
+
 class QDomDocument;
 class QDomNode;
 
-class QFrankSSLZertifikatspeicher: public QObject
+class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 {
 	Q_OBJECT
 	public:
 				QFrankSSLZertifikatspeicher(QObject* eltern);
-				void		SpeicherLaden(bool passwort=false);
+				enum				ArtDesZertifikats{CRL=0x00,CA=0x01,Zert=0x02};
+				Q_DECLARE_FLAGS(Zertifikatstype,ArtDesZertifikats)
+				void				SpeicherLaden(bool passwort=false);
+				const QStringList	ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type)const;
+				enum				ArtDesSpeichers{System=0x01,Nutzer=0x02};
+				Q_DECLARE_FLAGS(Speicherort,ArtDesZertifikats)
+//#ifndef Q_WS_WIN
+				bool				ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
+														const QFrankSSLZertifikatspeicher::Zertifikatstype &type,QFile &datei);
+//#endif
 
 	public slots:
-				void		PasswortFuerDenSpeicher(QString* passwort);				
+				void				PasswortFuerDenSpeicher(QString* passwort);				
 
 	signals:
-				void		Fehler(const QString &fehlertext)const;
-				void		Warnung(const QString &warnungstext)const;
-				void		PasswortFuerDenSpeicherHohlen()const;
+				void				Fehler(const QString &fehlertext)const;
+				void				Warnung(const QString &warnungstext)const;
+				void				PasswortFuerDenSpeicherHohlen()const;
 
 	private:
-				enum		Eintraege{CRL=0x00,CA=0x01,Zert=0x02};
-				Q_DECLARE_FLAGS(ArtDesEintrags,Eintraege)
-				QString		K_SpeicherortSystemweit;
-				QString		K_SpeicherortBenutzer;
-				bool		K_Speichergeladen;
-				bool		K_XMLBearbeiten(QDomDocument *xml);
-				bool		K_EintragBearbeiten(const QFrankSSLZertifikatspeicher::ArtDesEintrags &type,QDomNode *eintrag);
-				QString*	K_Passwort;
+				QString				K_SpeicherortSystemweit;
+				QString				K_SpeicherortBenutzer;
+				bool				K_Speichergeladen;
+				bool				K_XMLBearbeiten(QDomDocument *xml);
+				bool				K_EintragBearbeiten(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,QDomNode *eintrag);
+				QString*			K_Passwort;
 };
 #endif

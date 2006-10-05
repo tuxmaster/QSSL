@@ -18,7 +18,6 @@
  */
 
 #include "qssl.h"
-#include "Zertifikatsspeicher.h"
 
 //Open SSL Header
 #include <openssl/ssl.h>
@@ -70,8 +69,7 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	connect(this,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError)));
 	connect(this,SIGNAL(readyRead()),this,SLOT(K_DatenKoennenGelesenWerden()));
 	connect(this,SIGNAL(connected()),this,SLOT(K_MitServerVerbunden()));
-	connect(this,SIGNAL(disconnected()),this,SLOT(K_VerbindungZumServerGetrennt()));
-	connect(K_Zertifikatspeicher,SIGNAL(PasswortFuerDenSpeicherHohlen()),this,SIGNAL(PasswortFuerDenZertifikatsspeicher()));
+	connect(this,SIGNAL(disconnected()),this,SLOT(K_VerbindungZumServerGetrennt()));	
 }
 
 QFrankSSL::~QFrankSSL()
@@ -564,16 +562,6 @@ void QFrankSSL::K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe)
 									break;
 	}
 
-}
-
-void QFrankSSL::ZertifikateLaden()
-{
-	K_Zertifikatspeicher->SpeicherLaden();
-}
-
-void QFrankSSL::ZertifikatsspeicherPasswort(QString* passwort)
-{
-	K_Zertifikatspeicher->PasswortFuerDenSpeicher(passwort);
 }
 
 QFrankSSLZertifikatspeicher* QFrankSSL::K_Zertifikatspeicher=0;

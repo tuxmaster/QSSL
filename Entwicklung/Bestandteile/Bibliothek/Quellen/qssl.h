@@ -21,6 +21,7 @@
 #define QFRANKSSL_H
 
 #include <QtNetwork>
+#include "Zertifikatsspeicher.h"
 
 //Unter Windows  braucht man Hilfe beim Exportieren
 #ifdef Q_WS_WIN 
@@ -33,7 +34,6 @@
 		#define DLL_EXPORT
 #endif
 
-class QFrankSSLZertifikatspeicher;
 typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
 typedef struct bio_st BIO;
@@ -54,8 +54,7 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void								VerbindungHerstellen(const QString &rechnername,const quint16 &port,const OpenMode &betriebsart=QIODevice::ReadWrite);
 				void								VerfuegbareAlgorithmenFestlegen(const QStringList &welche){K_VerfuegbareAlgorithmen=welche;}
 				void								VerbindungTrennen();
-				void								ZertifikateLaden();
-				void								ZertifikatsspeicherPasswort(QString* passwort);
+				static QFrankSSLZertifikatspeicher	*Zertifikatsspeicher(){return K_Zertifikatspeicher;}
 				void								SSLVersionenFestlegen(const QFrankSSL::SSLVersion &sslVersion){K_ZuBenutzendeSSLVersionen=sslVersion;}
 				const QFrankSSL::SSLVersion&		SSLVersionen()const{return K_ZuBenutzendeSSLVersionen;}
 				const QStringList&					VerfuegbareAlgorithmen()const{return K_VerfuegbareAlgorithmen;}
@@ -69,8 +68,7 @@ class DLL_EXPORT QFrankSSL: public QTcpSocket
 				void								SSLFehler(const QString &fehlertext)const;
 				void								DatenBereitZumAbhohlen(const QByteArray &daten)const;
 				void								VerbindungGetrennt(const bool &fehler)const;
-				void								TunnelBereit()const;
-				void								PasswortFuerDenZertifikatsspeicher()const;
+				void								TunnelBereit()const;				
 
 	private slots:
 

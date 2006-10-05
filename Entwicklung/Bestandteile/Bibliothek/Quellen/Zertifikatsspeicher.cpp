@@ -199,7 +199,7 @@ bool QFrankSSLZertifikatspeicher::K_XMLBearbeiten(QDomDocument *xml)
 	return true;
 }
 
-bool QFrankSSLZertifikatspeicher::K_EintragBearbeiten(const QFrankSSLZertifikatspeicher::ArtDesEintrags &type,QDomNode *eintrag)
+bool QFrankSSLZertifikatspeicher::K_EintragBearbeiten(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,QDomNode *eintrag)
 {
 	//Alle Einträge bearbeiten
 	BIO *Puffer = BIO_new(BIO_s_mem());
@@ -264,6 +264,27 @@ bool QFrankSSLZertifikatspeicher::K_EintragBearbeiten(const QFrankSSLZertifikats
 	}
 	BIO_free(Puffer);
 	return true;
+}
+
+//#ifndef Q_WS_WIN
+bool QFrankSSLZertifikatspeicher::ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
+													  const QFrankSSLZertifikatspeicher::Zertifikatstype &type,QFile &datei)
+{
+	if(!K_Speichergeladen)
+	{
+#ifndef QT_NO_DEBUG
+		qDebug("QFrankSSLZertifikatspeicher ZertifikatSpeichern: Speicher nicht geladen.");
+#endif	
+		emit Fehler("Der Zertifikatsspeicher wurde nicht geladen.");
+		return false;
+	}
+	return true;
+}
+//#endif
+
+const QStringList QFrankSSLZertifikatspeicher::ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type)const
+{
+	return QStringList()<<"Zert1"<<"Zert2";
 }
 
 void QFrankSSLZertifikatspeicher::PasswortFuerDenSpeicher(QString* passwort)

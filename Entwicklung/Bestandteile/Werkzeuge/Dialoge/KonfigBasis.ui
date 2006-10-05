@@ -1,7 +1,5 @@
 <ui version="4.0" >
  <author>Frank Büttner</author>
- <comment></comment>
- <exportmacro></exportmacro>
  <class>DlgKonfigBasis</class>
  <widget class="QMainWindow" name="DlgKonfigBasis" >
   <property name="geometry" >
@@ -64,30 +62,9 @@
      <x>0</x>
      <y>0</y>
      <width>388</width>
-     <height>30</height>
+     <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu_Importieren" >
-    <property name="title" >
-     <string>&amp;Importieren</string>
-    </property>
-    <widget class="QMenu" name="menu_Zertifikate" >
-     <property name="title" >
-      <string>&amp;Zertifikate</string>
-     </property>
-     <addaction name="Menuepunkt_ZertifikatPEMkodiert" />
-     <addaction name="Menuepunkt_ZertifikatDERkodiert" />
-    </widget>
-    <widget class="QMenu" name="menu_Rueckruflisten" >
-     <property name="title" >
-      <string>&amp;Rückruflisten</string>
-     </property>
-     <addaction name="Menuepunkt_CRL_PEMkodiert" />
-     <addaction name="Menuepunkt_CRL_DERkodiert" />
-    </widget>
-    <addaction name="menu_Zertifikate" />
-    <addaction name="menu_Rueckruflisten" />
-   </widget>
    <widget class="QMenu" name="menu_Hilfe" >
     <property name="tearOffEnabled" >
      <bool>false</bool>
@@ -99,7 +76,22 @@
     <addaction name="Menuepunkt_ueberQt" />
     <addaction name="Menuepunkt_GPL_Lizenz" />
    </widget>
+   <widget class="QMenu" name="menu_Anzeigen" >
+    <property name="title" >
+     <string>&amp;Anzeigen</string>
+    </property>
+    <addaction name="Menuepunkt_ZertifikateAnzeigen" />
+    <addaction name="Menuepunkt_RueckruflistenAnzeigen" />
+   </widget>
+   <widget class="QMenu" name="menu_Importieren" >
+    <property name="title" >
+     <string>&amp;Importieren</string>
+    </property>
+    <addaction name="Menuepunkt_Zertifikat" />
+    <addaction name="Menuepunkt_CRL" />
+   </widget>
    <addaction name="menu_Importieren" />
+   <addaction name="menu_Anzeigen" />
    <addaction name="menu_Hilfe" />
   </widget>
   <action name="Menuepunkt_ueber" >
@@ -117,28 +109,27 @@
     <string>GPL &amp;Lizenz </string>
    </property>
   </action>
-  <action name="Menuepunkt_ZertifikatPEMkodiert" >
+  <action name="Menuepunkt_Zertifikat" >
    <property name="text" >
-    <string>&amp;PEM kodiert</string>
+    <string>&amp;Zertifikat</string>
    </property>
   </action>
-  <action name="Menuepunkt_ZertifikatDERkodiert" >
+  <action name="Menuepunkt_CRL" >
    <property name="text" >
-    <string>&amp;DER kodiert</string>
+    <string>&amp;Rückrufliste</string>
    </property>
   </action>
-  <action name="Menuepunkt_CRL_PEMkodiert" >
+  <action name="Menuepunkt_ZertifikateAnzeigen" >
    <property name="text" >
-    <string>&amp;PEM kodiert</string>
+    <string>&amp;Zertifikate</string>
    </property>
   </action>
-  <action name="Menuepunkt_CRL_DERkodiert" >
+  <action name="Menuepunkt_RueckruflistenAnzeigen" >
    <property name="text" >
-    <string>&amp;DER kodiert</string>
+    <string>&amp;Rückruflisten</string>
    </property>
   </action>
  </widget>
- <pixmapfunction></pixmapfunction>
  <resources/>
  <connections/>
 </ui>

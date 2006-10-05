@@ -35,7 +35,7 @@ QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 	connect(K_SSL,SIGNAL(DatenBereitZumAbhohlen(const QByteArray&)),this,SLOT(K_DatenSindDa(const QByteArray&)));
 	connect(K_SSL,SIGNAL(TunnelBereit()),this,SLOT(K_TunnelAufgebaut()));
 	connect(K_SSL,SIGNAL(VerbindungGetrennt(const bool)),this,SLOT(K_VerbindungGetrennt(const bool&)));
-	connect(K_SSL,SIGNAL(PasswortFuerDenZertifikatsspeicher()),this,SLOT(K_PasswortAbfragen()));
+	connect(K_SSL->Zertifikatsspeicher(),SIGNAL(PasswortFuerDenSpeicherHohlen()),this,SLOT(K_PasswortAbfragen()));
 	QTimer::singleShot(0,this,SLOT(K_ZertifikateLaden()));	
 }
 
@@ -152,7 +152,8 @@ void QFrankDlgHaupt::K_TunnelAufgebaut()
 
 void QFrankDlgHaupt::K_PasswortAbfragen()
 {
-	K_SSL->ZertifikatsspeicherPasswort(&QInputDialog::getText(this,tr("Passwortabfrage"),trUtf8("Bitte geben Sie das Passwort für den Zertifikatspeicher ein."),
+	K_SSL->Zertifikatsspeicher()->PasswortFuerDenSpeicher(&QInputDialog::getText(this,tr("Passwortabfrage"),trUtf8("Bitte geben Sie das Passwort für den"
+																													"Zertifikatspeicher ein."),
 															QLineEdit::NoEcho,QString(),0,(Qt::WFlags)Qt::Widget^Qt::WindowTitleHint));
 }
 
@@ -199,7 +200,7 @@ void QFrankDlgHaupt::on_txtEmpfangen_textChanged()
 
 void QFrankDlgHaupt::K_ZertifikateLaden()
 {
-	K_SSL->ZertifikateLaden();
+	K_SSL->Zertifikatsspeicher()->SpeicherLaden();
 }
 
 void QtNachrichten(QtMsgType type, const char *msg)

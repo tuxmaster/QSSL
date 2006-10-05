@@ -23,6 +23,8 @@
 #include <QtGui>
 #include "ui_KonfigBasis.h"
 
+class QFrankSSL;
+
 class QFrankZertkonfDlgHaupt :public QMainWindow,private Ui::DlgKonfigBasis 
 {
 	Q_OBJECT
@@ -31,12 +33,19 @@ class QFrankZertkonfDlgHaupt :public QMainWindow,private Ui::DlgKonfigBasis
 
 	private slots:
 
-			void	on_Menuepunkt_ZertifikatPEMkodiert_triggered();
-			void	on_Menuepunkt_ZertifikatDERkodiert_triggered();
-			void	on_Menuepunkt_CRL_PEMkodiert_triggered();
-			void	on_Menuepunkt_CRL_DERkodiert_triggered();
-			void	on_Menuepunkt_ueberQt_triggered();
-			void	on_Menuepunkt_ueber_triggered();
-			void	on_Menuepunkt_GPL_Lizenz_triggered();
+			void			on_Menuepunkt_CRL_triggered();
+			void			on_Menuepunkt_Zertifikat_triggered();		
+			void			on_Menuepunkt_ZertifikateAnzeigen_triggered();
+			void			on_Menuepunkt_RueckruflistenAnzeigen_triggered();
+			void			on_Menuepunkt_ueberQt_triggered();
+			void			on_Menuepunkt_ueber_triggered();
+			void			on_Menuepunkt_GPL_Lizenz_triggered();
+			void			K_SpeicherortGeaendert(const int &aktiv);
+			void			K_Fehler(const QString &fehler);
+
+	private:
+			QFrankSSL		*SSLSystem;
+			int				K_Speicherort;
+			QButtonGroup	*K_SpeicherortGruppe;
 };
 #endif
