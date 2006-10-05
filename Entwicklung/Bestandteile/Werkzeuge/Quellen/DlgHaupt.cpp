@@ -45,8 +45,7 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_Zertifikat_triggered()
 	Dialog.TitelSetzen(tr("Zertifikat importieren"));
 	if(Dialog.exec()==QDialog::Rejected)
 		return;
-	SSLSystem->Zertifikatsspeicher()->ZertifikatSpeichern((QFrankSSLZertifikatspeicher::Speicherort)K_Speicherort,QFrankSSLZertifikatspeicher::CA,
-														  QFile(Dialog.Datei()));
+	SSLSystem->Zertifikatsspeicher()->ZertifikatSpeichern((QFrankSSLZertifikatspeicher::Speicherort)K_Speicherort,QFrankSSLZertifikatspeicher::CA,Dialog.Datei());
 }
 
 
@@ -56,8 +55,7 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_triggered()
 	Dialog.TitelSetzen(trUtf8("Rückrufliste importieren"));
 	if(Dialog.exec()==QDialog::Rejected)
 		return;
-	SSLSystem->Zertifikatsspeicher()->ZertifikatSpeichern((QFrankSSLZertifikatspeicher::Speicherort)K_Speicherort,QFrankSSLZertifikatspeicher::CRL,
-														  QFile(Dialog.Datei()));
+	SSLSystem->Zertifikatsspeicher()->ZertifikatSpeichern((QFrankSSLZertifikatspeicher::Speicherort)K_Speicherort,QFrankSSLZertifikatspeicher::CRL,Dialog.Datei());
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_triggered()

@@ -268,7 +268,7 @@ bool QFrankSSLZertifikatspeicher::K_EintragBearbeiten(const QFrankSSLZertifikats
 
 //#ifndef Q_WS_WIN
 bool QFrankSSLZertifikatspeicher::ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
-													  const QFrankSSLZertifikatspeicher::Zertifikatstype &type,QFile &datei)
+													  const QFrankSSLZertifikatspeicher::Zertifikatstype &type,const QString &datei)
 {
 	if(!K_Speichergeladen)
 	{
