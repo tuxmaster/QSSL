@@ -43,17 +43,18 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				QFrankSSLZertifikatspeicher(QObject* eltern);
 				enum				ArtDesZertifikats{CRL=0x00,CA=0x01,Zert=0x02};
 				Q_DECLARE_FLAGS(Zertifikatstype,ArtDesZertifikats)
-				void				SpeicherLaden(bool passwort=false);
+				void				PasswortFuerDenSpeicher(QString* passwort);
 				const QStringList	ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type)const;
 				enum				ArtDesSpeichers{System=0x01,Nutzer=0x02};
 				Q_DECLARE_FLAGS(Speicherort,ArtDesSpeichers)
 //#ifndef Q_WS_WIN
 				bool				ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
 														const QFrankSSLZertifikatspeicher::Zertifikatstype &type,const QString &datei);
+				void				loeschen(const QFrankSSLZertifikatspeicher::Speicherort &ort);
 //#endif
 
-	public slots:
-				void				PasswortFuerDenSpeicher(QString* passwort);				
+	public slots:				
+				void				SpeicherLaden(bool passwort=false);
 
 	signals:
 				void				Fehler(const QString &fehlertext)const;

@@ -36,7 +36,7 @@
        <item>
         <widget class="QRadioButton" name="speicherSystem" >
          <property name="text" >
-          <string>Systemweit</string>
+          <string>System</string>
          </property>
         </widget>
        </item>
@@ -90,8 +90,16 @@
     <addaction name="Menuepunkt_Zertifikat" />
     <addaction name="Menuepunkt_CRL" />
    </widget>
+   <widget class="QMenu" name="menu_Extras" >
+    <property name="title" >
+     <string>&amp;Extras</string>
+    </property>
+    <addaction name="Menuepunkt_SpeicheNeuLaden" />
+    <addaction name="Menuepunkt_SpeicherLoeschen" />
+   </widget>
    <addaction name="menu_Importieren" />
    <addaction name="menu_Anzeigen" />
+   <addaction name="menu_Extras" />
    <addaction name="menu_Hilfe" />
   </widget>
   <action name="Menuepunkt_ueber" >
@@ -127,6 +135,16 @@
   <action name="Menuepunkt_RueckruflistenAnzeigen" >
    <property name="text" >
     <string>&amp;Rückruflisten</string>
+   </property>
+  </action>
+  <action name="Menuepunkt_SpeicheNeuLaden" >
+   <property name="text" >
+    <string>&amp;Speicher neu laden</string>
+   </property>
+  </action>
+  <action name="Menuepunkt_SpeicherLoeschen" >
+   <property name="text" >
+    <string>Speicher &amp;löschen</string>
    </property>
   </action>
  </widget>

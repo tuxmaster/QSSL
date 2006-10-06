@@ -24,7 +24,8 @@ else {
         PFAD = $$system(pwd)
 	system(echo $$PFAD >/tmp/x.x)
 }
-SUBDIRS		+=  Bestandteile/Bibliothek\
-				Bestandteile/Demo\
-				Bestandteile/Werkzeuge
-//!win32:SUBDIRS +=Bestandteile/Werkzeuge
+SUBDIRS		=  Bestandteile/Bibliothek
+//!win32:SUBDIRS += Bestandteile/Werkzeuge
+SUBDIRS		+= Bestandteile/Werkzeuge\ 
+			   Bestandteile/Demo
+				

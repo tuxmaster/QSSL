@@ -31,12 +31,14 @@ QFrankZertkonfDlgHaupt::QFrankZertkonfDlgHaupt(QWidget *eltern):QMainWindow(elte
 	//jetzt das Fenster verschieben
 	this->move(x,y);
 	K_SpeicherortGruppe=new QButtonGroup(this);
-	K_SpeicherortGruppe->addButton(speicherNutzer,1);
-	K_SpeicherortGruppe->addButton(speicherSystem,0);
+	K_SpeicherortGruppe->addButton(speicherNutzer,QFrankSSLZertifikatspeicher::Nutzer);
+	K_SpeicherortGruppe->addButton(speicherSystem,QFrankSSLZertifikatspeicher::System);
 	SSLSystem=new QFrankSSL(this);
 	connect(K_SpeicherortGruppe,SIGNAL(buttonClicked(int)),this,SLOT(K_SpeicherortGeaendert(const int&)));
-	connect(SSLSystem->Zertifikatsspeicher(),SIGNAL(Fehler(const QString&)),this,SLOT(K_Fehler(const QString&)));	
+	connect(SSLSystem->Zertifikatsspeicher(),SIGNAL(Fehler(const QString&)),this,SLOT(K_Fehler(const QString&)));
+	connect(SSLSystem->Zertifikatsspeicher(),SIGNAL(PasswortFuerDenSpeicherHohlen()),this,SLOT(K_PasswortHohlen()));
 	K_Speicherort=QFrankSSLZertifikatspeicher::Nutzer;
+	QTimer::singleShot(0,SSLSystem->Zertifikatsspeicher(),SLOT(SpeicherLaden()));	
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_Zertifikat_triggered()
@@ -58,6 +60,14 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_triggered()
 	SSLSystem->Zertifikatsspeicher()->ZertifikatSpeichern((QFrankSSLZertifikatspeicher::Speicherort)K_Speicherort,QFrankSSLZertifikatspeicher::CRL,Dialog.Datei());
 }
 
+void QFrankZertkonfDlgHaupt::on_Menuepunkt_SpeicherLoeschen_triggered()
+{
+	if(QMessageBox::question(this,tr("Sicherheitsabfrage"),trUtf8("Sind Sie sicher, das Sie den %1speicher löschen wollen?").
+									arg(K_SpeicherortGruppe->checkedButton()->text()),QMessageBox::No|QMessageBox::Escape,QMessageBox::Yes)==QMessageBox::No)
+		return;
+	SSLSystem->Zertifikatsspeicher()->loeschen((QFrankSSLZertifikatspeicher::Speicherort)K_SpeicherortGruppe->checkedId());
+}
+
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_triggered()
 {
 	QFile Lizenzdatei(":/Lizenz.txt");
@@ -71,12 +81,21 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_triggered()
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikateAnzeigen_triggered()
 {
-	QMessageBox::information(this,"Testliste für Zerts",SSLSystem->Zertifikatsspeicher()->ListeAllerZertifikate(QFrankSSLZertifikatspeicher::CA).join(","));
-							
+	QMessageBox::information(this,"Testliste für Zerts",SSLSystem->Zertifikatsspeicher()->ListeAllerZertifikate(QFrankSSLZertifikatspeicher::CA).join(","));	
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_RueckruflistenAnzeigen_triggered()
 {
+	QMessageBox::information(this,"Testliste für Zerts",SSLSystem->Zertifikatsspeicher()->ListeAllerZertifikate(QFrankSSLZertifikatspeicher::CRL).join(","));
+}
+
+void QFrankZertkonfDlgHaupt::K_PasswortHohlen()
+{
+	bool abbrechen;
+	QString Passwort=QInputDialog::getText(this,tr("Passwortabfrage"),trUtf8("Bitte geben Sie das Passwort für den Zertifikatsspeicher ein."),
+										   QLineEdit::NoEcho,QString(),&abbrechen,(Qt::WFlags)Qt::Widget^Qt::WindowTitleHint);
+	if(abbrechen)
+		SSLSystem->Zertifikatsspeicher()->PasswortFuerDenSpeicher(&Passwort);	
 }
 
 void QFrankZertkonfDlgHaupt::K_Fehler(const QString &fehler)
@@ -86,18 +105,9 @@ void QFrankZertkonfDlgHaupt::K_Fehler(const QString &fehler)
 
 void QFrankZertkonfDlgHaupt::K_SpeicherortGeaendert(const int &aktiv)
 {
-	switch(aktiv)
-	{
-		case 0:
-				K_Speicherort=QFrankSSLZertifikatspeicher::System;
-				break;
-		case 1:
-				K_Speicherort=QFrankSSLZertifikatspeicher::Nutzer;
-				break;
-		default:
-				qFatal("FrankZertkonfDlgHaupt SpeicherortGeaendert nicht definierter Speicherort");
-				break;
-	}
+	if(aktiv!=QFrankSSLZertifikatspeicher::System || aktiv!=QFrankSSLZertifikatspeicher::System)
+		qFatal("FrankZertkonfDlgHaupt SpeicherortGeaendert nicht definierter Speicherort");
+	K_Speicherort=aktiv;	
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_ueber_triggered()
