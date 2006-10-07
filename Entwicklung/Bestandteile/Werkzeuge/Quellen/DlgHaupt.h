@@ -44,6 +44,7 @@ class QFrankZertkonfDlgHaupt :public QMainWindow,private Ui::DlgKonfigBasis
 			void			on_Menuepunkt_SpeicheNeuLaden_triggered(){K_PasswortHohlen();}
 			void			K_SpeicherortGeaendert(const int &aktiv);
 			void			K_Fehler(const QString &fehler);
+			void			K_Warnung(const QString &warnung);
 			void			K_PasswortHohlen();
 
 	private:

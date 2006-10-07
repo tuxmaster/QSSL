@@ -36,6 +36,7 @@ QFrankZertkonfDlgHaupt::QFrankZertkonfDlgHaupt(QWidget *eltern):QMainWindow(elte
 	SSLSystem=new QFrankSSL(this);
 	connect(K_SpeicherortGruppe,SIGNAL(buttonClicked(int)),this,SLOT(K_SpeicherortGeaendert(const int&)));
 	connect(SSLSystem->Zertifikatsspeicher(),SIGNAL(Fehler(const QString&)),this,SLOT(K_Fehler(const QString&)));
+	connect(SSLSystem->Zertifikatsspeicher(),SIGNAL(Warnung(const QString&)),this,SLOT(K_Warnung(const QString&)));
 	connect(SSLSystem->Zertifikatsspeicher(),SIGNAL(PasswortFuerDenSpeicherHohlen()),this,SLOT(K_PasswortHohlen()));
 	K_Speicherort=QFrankSSLZertifikatspeicher::Nutzer;
 	QTimer::singleShot(0,SSLSystem->Zertifikatsspeicher(),SLOT(SpeicherLaden()));	
@@ -92,7 +93,7 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_RueckruflistenAnzeigen_triggered()
 void QFrankZertkonfDlgHaupt::K_PasswortHohlen()
 {
 	bool abbrechen;
-	QString Passwort=QInputDialog::getText(this,tr("Passwortabfrage"),trUtf8("Bitte geben Sie das Passwort für den Zertifikatsspeicher ein."),
+	QString Passwort=QInputDialog::getText(this,tr("Passwortabfrage"),trUtf8("Bitte geben Sie das Passwort für den Zertifikatsspeicher des Benutzers ein."),
 										   QLineEdit::NoEcho,QString(),&abbrechen,(Qt::WFlags)Qt::Widget^Qt::WindowTitleHint);
 	if(abbrechen)
 		SSLSystem->Zertifikatsspeicher()->PasswortFuerDenSpeicher(&Passwort);	
@@ -101,6 +102,11 @@ void QFrankZertkonfDlgHaupt::K_PasswortHohlen()
 void QFrankZertkonfDlgHaupt::K_Fehler(const QString &fehler)
 {
 	QMessageBox::critical(this,tr("Fehler"),tr("Folgener Fehler ist aufgetreten:\r\n%1").arg(fehler));
+}
+
+void QFrankZertkonfDlgHaupt::K_Warnung(const QString &warnung)
+{
+	QMessageBox::warning(this,tr("Warnung"),tr("Folgene Warnung wurde ausgegeben:\r\n%1").arg(warnung));
 }
 
 void QFrankZertkonfDlgHaupt::K_SpeicherortGeaendert(const int &aktiv)

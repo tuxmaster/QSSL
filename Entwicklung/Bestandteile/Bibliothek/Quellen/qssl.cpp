@@ -184,12 +184,12 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 {
 	int BytesDa=bytesAvailable();
 #ifndef QT_NO_DEBUG
-	qDebug(trUtf8("QFrankSSL: Es können %1 Bytes gelesen werden.","debug").arg(BytesDa).toLatin1().constData());
+	qDebug(qPrintable(trUtf8("QFrankSSL: Es können %1 Bytes gelesen werden.","debug").arg(BytesDa)));
 #endif
 	if(K_Verbindungsstatus==QFrankSSL::GETRENNT)
 	{
 #ifndef QT_NO_DEBUG
-		qDebug(QString("\tAber es besteht keine Verbindung zum SSL Server:(").toLatin1().constData());
+		qDebug(qPrintable(QString("\tAber es besteht keine Verbindung zum SSL Server:(")));
 #endif
 		return;
 	}
