@@ -39,11 +39,8 @@ QFrankDatenstromfilter::QFrankDatenstromfilter(QIODevice *quelldatenstrom,QStrin
 		qFatal("QFrankDatenstromfilter Hash vom PW konnte nicht berechnet werden.");
 	EVP_MD_CTX_cleanup(&Hash);
 #ifndef QT_NO_DEBUG
-	qDebug(qPrintable(QString("QFrankDatenstromfilter Hash vom Passwort \"%1\":\r\n%2").arg(*schluessel).arg(K_FeldNachHex(Passworthash))));
+	qDebug(qPrintable(QString("QFrankDatenstromfilter: Hash vom Passwort \"%1\":\r\n%2").arg(*schluessel).arg(K_FeldNachHex(Passworthash))));
 #endif
-	//Passwort entsorgen
-	schluessel->clear();
-	//uchar test[]={9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	uchar K_IV[]={1,2,3,4,0,0,0,0,0,0,0,0,0,0,0,0};
 	K_Verschluesseln=new EVP_CIPHER_CTX();
 	K_Entschluesseln=new EVP_CIPHER_CTX();
@@ -52,10 +49,7 @@ QFrankDatenstromfilter::QFrankDatenstromfilter(QIODevice *quelldatenstrom,QStrin
 	//Es wird eine AES256 Verschlüsselung im CFB8 Modus benutzt.
 	if(EVP_EncryptInit_ex(K_Verschluesseln,EVP_aes_256_cfb8(),NULL,(uchar*)Passworthash.constData(),K_IV)!=1 ||
 		EVP_DecryptInit_ex(K_Entschluesseln,EVP_aes_256_cfb8(),NULL,(uchar*)Passworthash.constData(),K_IV)!=1)
-		qFatal(qPrintable(trUtf8("QFrankDatenstromfilter der Verschlüsselungsalgorithmus konnte nicht initialisiert werden.","debug")));
-	//Hash entsorgen
-	Passworthash.clear();
-	
+		qFatal(qPrintable(trUtf8("QFrankDatenstromfilter der Verschlüsselungsalgorithmus konnte nicht initialisiert werden.","debug")));		
 }
 
 QFrankDatenstromfilter::~QFrankDatenstromfilter()
@@ -133,6 +127,39 @@ qint64 QFrankDatenstromfilter::readData(char *daten,qint64 maximaleLaenge)
 
 qint64 QFrankDatenstromfilter::writeData(const char *daten, qint64 maximaleLaenge)
 {
+#ifndef QT_NO_DEBUG
+	qDebug("QFrankDatenstromfilter: es sollen %i Bytes geschrieben werden",(int)maximaleLaenge);
+#endif
+	int Verschluesselt,VerschluesseltEntgueltig;
+	QByteArray Puffer;
+	Puffer.resize(maximaleLaenge);
+	if(EVP_EncryptUpdate(K_Verschluesseln,(uchar*)Puffer.data(),&Verschluesselt,(uchar*)daten,maximaleLaenge)!=1)
+	{
+#ifndef QT_NO_DEBUG
+		qWarning(qPrintable(trUtf8("QFrankDatenstromfilter: Verschlüsselung gescheitert","debug")));
+#endif
+		return -1;
+	}
+	else
+	{
+		if(EVP_EncryptFinal_ex(K_Verschluesseln,((uchar*)Puffer.data())+Verschluesselt,&VerschluesseltEntgueltig)!=1)
+		{
+#ifndef QT_NO_DEBUG
+			qWarning(qPrintable(trUtf8("QFrankDatenstromfilter: Entgültige Verschlüsselung gescheitert","debug")));
+#endif
+			return -1;
+		}
+		else
+		{
+#ifndef QT_NO_DEBUG
+			Verschluesselt=Verschluesselt+VerschluesseltEntgueltig;
+			qDebug(qPrintable(trUtf8("QFrankDatenstromfilter: es wurden %1 Bytes verschlüsselt","debug").arg(Verschluesselt)));
+			qDebug(qPrintable(QString("\tDaten: %1").arg(K_FeldNachHex(Puffer))));
+#endif
+			//Datenauf den Datenträger schreiben.
+			return K_Quelldatenstrom->write(Puffer);
+		}
+	}
 	return -1;
 }
 //Beschränkungen für den sequenziellen Datenstrom

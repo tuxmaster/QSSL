@@ -96,7 +96,7 @@ void QFrankZertkonfDlgHaupt::K_PasswortHohlen()
 	QString Passwort=QInputDialog::getText(this,tr("Passwortabfrage"),trUtf8("Bitte geben Sie das Passwort für den Zertifikatsspeicher des Benutzers ein."),
 										   QLineEdit::NoEcho,QString(),&abbrechen,(Qt::WFlags)Qt::Widget^Qt::WindowTitleHint);
 	if(abbrechen)
-		SSLSystem->Zertifikatsspeicher()->PasswortFuerDenSpeicher(&Passwort);	
+		SSLSystem->Zertifikatsspeicher()->PasswortFuerDenSpeicher(Passwort);	
 }
 
 void QFrankZertkonfDlgHaupt::K_Fehler(const QString &fehler)
@@ -111,7 +111,7 @@ void QFrankZertkonfDlgHaupt::K_Warnung(const QString &warnung)
 
 void QFrankZertkonfDlgHaupt::K_SpeicherortGeaendert(const int &aktiv)
 {
-	if(aktiv!=QFrankSSLZertifikatspeicher::System || aktiv!=QFrankSSLZertifikatspeicher::System)
+	if(aktiv!=QFrankSSLZertifikatspeicher::System && aktiv!=QFrankSSLZertifikatspeicher::Nutzer)
 		qFatal("FrankZertkonfDlgHaupt SpeicherortGeaendert nicht definierter Speicherort");
 	K_Speicherort=aktiv;	
 }

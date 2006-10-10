@@ -38,14 +38,16 @@ QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObjec
 	QSettings EinstellungenNutzer(QSettings::IniFormat,QSettings::UserScope,"QSSL","tmp");
 	K_DateinameSystem=EinstellungenSystem.fileName().left(EinstellungenSystem.fileName().lastIndexOf("/"))+"/Zertifikate.db";
 	K_DateinameBenutzer=EinstellungenNutzer.fileName().left(EinstellungenNutzer.fileName().lastIndexOf("/"))+"/Zertifikate.db";
+	K_PasswortGesetzt=false;
+	K_ZertspeicherAktion=QFrankSSLZertifikatspeicher::Nichts;
 #ifndef QT_NO_DEBUG
 	qDebug(qPrintable(QString("Ablageort des Zertifikatsspeichers:\r\n\tSystemweit:%1\r\n\tBenutzer:%2").arg(K_DateinameSystem).arg(K_DateinameBenutzer)));
 #endif
 //#endif
-	K_Speichergeladen=false;
+	K_Speichergeladen=false;	
 }
 
-void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
+void QFrankSSLZertifikatspeicher::SpeicherLaden()
 {
 	/*
 		Strucktur des Speichers(wenn nicht der OS eigene genutzt wird):
@@ -72,12 +74,13 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 		return;
 	}
 //#ifndef Q_WS_WIN
-	if(!passwort)
+	if(!K_PasswortGesetzt)
 	{
 		//Passwort für den Nutzerspeicher abfragen
+		K_ZertspeicherAktion=QFrankSSLZertifikatspeicher::Laden;
 		emit PasswortFuerDenSpeicherHohlen();
 		return;
-	}
+	}		
 	QDomDocument* Speicher=new QDomDocument();
 	//System
 	if(K_XMLLaden(Speicher,QFrankSSLZertifikatspeicher::System))
@@ -89,18 +92,20 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 			qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Speicher des Systems beschädigt","debug")));
 #endif
 			emit Fehler(trUtf8("Der Zertifikatspeicher des Systems ist beschädigt."));
+			K_PasswortLoeschen();
 			delete Speicher;
 			return;
 		}
 #ifndef QT_NO_DEBUG
 				qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
-				//qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
+				qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
 #endif
 			
 		K_Speichergeladen=true;
 	}
 	else
 	{
+		K_PasswortLoeschen();
 		delete Speicher;
 		return;
 	}
@@ -108,96 +113,30 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden(bool passwort)
 	if(K_XMLLaden(Speicher,QFrankSSLZertifikatspeicher::Nutzer))
 	{
 		//Bearbeiten
-		K_Speichergeladen=true;
-	}
-	else
-	{
-		delete Speicher;
-		return;
-	}
-	
-/*
-	if(K_DateiSystem.exists())
-	{
-		if(!K_DateiSystem.open(QIODevice::ReadOnly))
-		{
-#ifndef QT_NO_DEBUG
-			qWarning(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Systemspeicher konnte nicht geöffnet werden.","debug")));
-#endif
-			emit Warnung(tr("Der Zertifikatsspeicher des Systems konnte nicht gelesen werden."));
-		}
-		else
-		{
-			if(!Speicher->setContent(&K_DateiSystem))
-			{
-#ifndef QT_NO_DEBUG
-				qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Speicher des Systems beschädigt","debug")));
-#endif
-				K_DateiSystem.close();
-				emit Fehler(trUtf8("Der Zertifikatspeicher des Systems ist beschädigt."));
-				delete Speicher;
-				return;
-			}
-			else
-			{
-				K_DateiSystem.close();
-				if(!K_XMLBearbeiten(Speicher))
-				{
-#ifndef QT_NO_DEBUG
-					qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Speicher des Systems beschädigt","debug")));
-#endif
-					K_DateiSystem.close();
-					emit Fehler(trUtf8("Der Zertifikatspeicher des Systems ist beschädigt."));
-					delete Speicher;
-					return;
-				}
-#ifndef QT_NO_DEBUG
-				qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
-				//qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
-#endif
-			}
-		}
-	}
-#ifndef QT_NO_DEBUG
-	else
-		qDebug("QFrankSSLZertifikatspeicher Laden: kein Systemspeicher vorhanden.");
-#endif	
-	if(K_DateiBenutzer.exists())
-	{
-		QFrankDatenstromfilter Entschluesselung(&K_DateiBenutzer,K_Passwort);
-		if(!Entschluesselung.open(QIODevice::ReadOnly))
-		{
-#ifndef QT_NO_DEBUG
-			qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: konnte den Speicher des Nutzers nicht öffnen\r\nUrsache:%1","debug").
-										arg(Entschluesselung.errorString())));
-#endif
-			emit Fehler(tr("Der Zertifikatspeicher des Benutzers konnte nicht geladen werden."));
-			delete Speicher;
-			return;
-		}
-		if(!Speicher->setContent(&Entschluesselung))
+		if(!K_XMLBearbeiten(Speicher))
 		{
 #ifndef QT_NO_DEBUG
 			qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: Speicher des Nutzers beschädigt","debug")));
 #endif
-			K_DateiBenutzer.close();
-			emit Fehler(trUtf8("Der Zertifikatspeicher des Benutzers ist beschädigt, oder das Passwort war falsch."));
+			emit Fehler(trUtf8("Der Zertifikatspeicher des Nutzers ist beschädigt."));
 			delete Speicher;
+			K_PasswortLoeschen();
 			return;
 		}
-		K_DateiBenutzer.close();
 #ifndef QT_NO_DEBUG
-		qDebug("QFrankSSLZertifikatspeicher Laden: Nutzerspeicher geladen.");
-		//qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
+				qDebug("QFrankSSLZertifikatspeicher Laden: Nutzerpeicher geladen.");
+				//qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
 #endif
+		K_Speichergeladen=true;
 	}
-#ifndef QT_NO_DEBUG
 	else
-		qDebug("QFrankSSLZertifikatspeicher Laden: kein Nutzerspeicher vorhanden.");
-#endif	
-	delete Speicher;
-//#endif
-	K_Speichergeladen=true;*/
+	{
+		K_Speichergeladen=false;
+		delete Speicher;
+		K_PasswortLoeschen();
+		return;
+	}
+	K_PasswortLoeschen();
 }
 
 const QStringList QFrankSSLZertifikatspeicher::ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type)const
@@ -237,7 +176,9 @@ bool QFrankSSLZertifikatspeicher::K_XMLLaden(QDomDocument *dokument,const QFrank
 			//Inhalt setzen entweder direkt oder vorher entschlüsselm
 			if(type==QFrankSSLZertifikatspeicher::Nutzer)
 			{
-				QFrankDatenstromfilter Entschluesselung(&Datei,K_Passwort);
+				Datei.close();
+				QFrankDatenstromfilter Entschluesselung(&Datei,&K_Passwort);
+				Entschluesselung.open(QIODevice::ReadOnly);
 				if(!dokument->setContent(&Entschluesselung))
 				{
 					//Entschlüsseln gescheitert.
@@ -273,10 +214,14 @@ bool QFrankSSLZertifikatspeicher::K_XMLLaden(QDomDocument *dokument,const QFrank
 	}
 	else
 	{
-		//Speicher existiert nicht also warnen
+		//Speicher existiert nicht also warnen und ein leeres Modell zurückgeben.
 #ifndef QT_NO_DEBUG
 		qWarning(qPrintable(tr("QFrankSSLZertifikatspeicher XMLLaden: Der %1speicher existiert nicht.","debug").arg(K_SpeichertypeText)));
-#endif
+#endif		
+		QDomProcessingInstruction Anweisung=dokument->createProcessingInstruction("xml","version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"");
+		dokument->appendChild(Anweisung);
+		QDomElement Wurzel = dokument->createElement("Zertifikatsspeicher");
+		dokument->appendChild(Wurzel);
 		emit Warnung(tr("Der Zertifikatsspeicher des %1s existiert nicht.").arg(K_SpeichertypeText));
 	}
 	return true;
@@ -301,6 +246,22 @@ bool QFrankSSLZertifikatspeicher::K_XMLSpeichern(QDomDocument *dokument, const Q
 	if(ort==QFrankSSLZertifikatspeicher::Nutzer)
 	{
 		//mit
+		Datei.close();
+		QFrankDatenstromfilter Verschluesselung(&Datei,&K_Passwort);
+		Verschluesselung.open(QIODevice::WriteOnly);
+		if(Verschluesselung.write(dokument->toByteArray())==-1)
+		{
+			Verschluesselung.close();
+#ifndef QT_NO_DEBUG
+			qDebug(qPrintable(QString("QFrankSSLZertifikatspeicher XML speichern: %1speicher konnte nicht geschrieben werden. Ursache:\r\n%2")
+										.arg(K_SpeichertypeText).arg(Verschluesselung.errorString())));
+#endif
+			emit Fehler(trUtf8("Fehler beim schreiben auf den Datenträger währen des Schreibes des %1speichers. Ursache:\r\n%2").arg(K_SpeichertypeText)
+																																.arg(Verschluesselung.
+																																	 errorString()));
+			return false;
+		}
+		Verschluesselung.close();
 	}
 	else
 	{
@@ -434,9 +395,23 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 }
 
 
-bool QFrankSSLZertifikatspeicher::ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
+void QFrankSSLZertifikatspeicher::ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
 													  const QFrankSSLZertifikatspeicher::Zertifikatstype &type,const QString &datei)
 {
+	//Wenn wir ein Zert in den Nutzerspeicher schreiben sollen, dann braucht wir ein Passwort.
+	if(ort==QFrankSSLZertifikatspeicher::Nutzer)
+	{
+		if(!K_PasswortGesetzt)
+		{
+			//Passwort für den Nutzerspeicher abfragen
+			K_ZertspeicherAktion=QFrankSSLZertifikatspeicher::Speichern;
+			K_Speicherort=ort;
+			K_Zerttype=type;
+			K_Zertdatei=datei;
+			emit PasswortFuerDenSpeicherHohlen();
+			return;
+		}
+	}
 	QDomDocument* Speicher=new QDomDocument();
 	if(!K_XMLLaden(Speicher,ort))
 	{
@@ -444,22 +419,26 @@ bool QFrankSSLZertifikatspeicher::ZertifikatSpeichern(const QFrankSSLZertifikats
 		qDebug("QFrankSSLZertifikatspeicher ZertifikatSpeichern: Speicher wurde nicht geladen.");
 #endif
 		delete Speicher;
-		return false;
+		K_PasswortLoeschen();
+		return;
 	}
 	//Eintrag in das XML Modell einfügen
 	if(!K_XMLEintragSchreiben(type,datei,Speicher))
 	{
 		delete Speicher;
-		return false;
+		K_PasswortLoeschen();
+		return;
 	}
 	//XML Datei speichern
 	if(!K_XMLSpeichern(Speicher,ort))
 	{
 		delete Speicher;
-		return false;
+		K_PasswortLoeschen();
+		return;
 	}
 	delete Speicher;
-	return true;
+	K_PasswortLoeschen();
+	return;
 }
 
 bool QFrankSSLZertifikatspeicher::K_XMLEintragSchreiben(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,const QString &quellDatei,QDomDocument *xml)
@@ -504,9 +483,26 @@ void QFrankSSLZertifikatspeicher::loeschen(const QFrankSSLZertifikatspeicher::Sp
 #endif
 }
 
-void QFrankSSLZertifikatspeicher::PasswortFuerDenSpeicher(QString* passwort)
+void QFrankSSLZertifikatspeicher::PasswortFuerDenSpeicher(QString &passwort)
 {
 	K_Passwort=passwort;
-	SpeicherLaden(true);
+	K_PasswortGesetzt=true;
+	passwort.clear();
+	switch(K_ZertspeicherAktion)
+	{
+		case QFrankSSLZertifikatspeicher::Laden:
+													SpeicherLaden();
+													break;
+		case QFrankSSLZertifikatspeicher::Speichern:
+													ZertifikatSpeichern(K_Speicherort,K_Zerttype,K_Zertdatei);
+													break;
+	}
+}
+
+void QFrankSSLZertifikatspeicher::K_PasswortLoeschen()
+{
+	K_Passwort.clear();
+	K_PasswortGesetzt=false;
+	K_ZertspeicherAktion=QFrankSSLZertifikatspeicher::Nichts;
 }
 //#endif

@@ -47,14 +47,14 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				enum				ArtDesSpeichers{System=0x01,Nutzer=0x02};
 				Q_DECLARE_FLAGS(Speicherort,ArtDesSpeichers)
 //#ifndef Q_WS_WIN
-				void				PasswortFuerDenSpeicher(QString* passwort);
-				bool				ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
+				void				PasswortFuerDenSpeicher(QString &passwort);
+				void				ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
 														const QFrankSSLZertifikatspeicher::Zertifikatstype &type,const QString &datei);
 				void				loeschen(const QFrankSSLZertifikatspeicher::Speicherort &ort);
 //#endif
 
 	public slots:				
-				void				SpeicherLaden(bool passwort=false);
+				void				SpeicherLaden();
 
 	signals:
 				void				Fehler(const QString &fehlertext)const;
@@ -68,9 +68,17 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				QString				K_SpeichertypeText;
 				void				K_SpeichertypeTextSetzen(const QFrankSSLZertifikatspeicher::Speicherort &type);
 //#ifndef Q_WS_WIN
+				enum				LadenOderSpeichern{Laden=0x01,Speichern=0x02,Nichts=0x03};
+				Q_DECLARE_FLAGS(LadenSpeichern,LadenOderSpeichern)
+				QFrankSSLZertifikatspeicher::LadenSpeichern		K_ZertspeicherAktion;
+				QFrankSSLZertifikatspeicher::Speicherort		K_Speicherort;
+				QFrankSSLZertifikatspeicher::Zertifikatstype	K_Zerttype;
+				QString											K_Zertdatei;
+				void				K_PasswortLoeschen();
 				QString				K_DateinameBenutzer;
 				QString				K_DateinameSystem;
-				QString*			K_Passwort;
+				QString				K_Passwort;
+				bool				K_PasswortGesetzt;
 				bool				K_XMLLaden(QDomDocument *dokument,const QFrankSSLZertifikatspeicher::Speicherort &type);
 				bool				K_XMLSpeichern(QDomDocument *dokument,const QFrankSSLZertifikatspeicher::Speicherort &ort);
 				bool				K_XMLBearbeiten(QDomDocument *xml);
