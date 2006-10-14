@@ -49,7 +49,8 @@ QFrankDatenstromfilter::QFrankDatenstromfilter(QIODevice *quelldatenstrom,QStrin
 	//Es wird eine AES256 Verschlüsselung im CFB8 Modus benutzt.
 	if(EVP_EncryptInit_ex(K_Verschluesseln,EVP_aes_256_cfb8(),NULL,(uchar*)Passworthash.constData(),K_IV)!=1 ||
 		EVP_DecryptInit_ex(K_Entschluesseln,EVP_aes_256_cfb8(),NULL,(uchar*)Passworthash.constData(),K_IV)!=1)
-		qFatal(qPrintable(trUtf8("QFrankDatenstromfilter der Verschlüsselungsalgorithmus konnte nicht initialisiert werden.","debug")));		
+		qFatal(qPrintable(trUtf8("QFrankDatenstromfilter der Verschlüsselungsalgorithmus konnte nicht initialisiert werden.","debug")));
+	open(K_Quelldatenstrom->openMode());
 }
 
 QFrankDatenstromfilter::~QFrankDatenstromfilter()
@@ -67,11 +68,33 @@ bool QFrankDatenstromfilter::open(OpenMode strommodus)
 		Der Quelldatenstrom muss im selben Modus geöffnet sei wie das Filter.
 		Wenn er nicht geöffnet ist, wird versucht ihn in dem selben Modus zu öffnen wie das Filter
 	*/
+#ifndef QT_NO_DEBUG
+	qDebug(qPrintable(trUtf8("QFrankDatenstromfilter öffnen: Modus 0x%1","debug").arg(strommodus,0,16)));
+#endif
 	bool QuelldatenstromBereit;
 	if(K_Quelldatenstrom->isOpen())
-		QuelldatenstromBereit=(K_Quelldatenstrom->openMode() !=strommodus);
+	{
+		QuelldatenstromBereit=K_Quelldatenstrom->openMode()!=strommodus? false:true;
+		if(!QuelldatenstromBereit)
+		{
+			setErrorString(trUtf8("Der Quelldatenstrom muss im selben Modus geöffnet sein."));
+#ifndef QT_NO_DEBUG
+			qWarning(qPrintable(trUtf8("QFrankDatenstromfilter öffnen: Quelldatenstrom ist anders geöffnet Modus: 0x%1","debug")
+										.arg(K_Quelldatenstrom->openMode(),0,16)));
+#endif
+		}
+	}
 	else
+	{
 		QuelldatenstromBereit=K_Quelldatenstrom->open(strommodus);
+		if(!QuelldatenstromBereit)
+		{
+			setErrorString(trUtf8("Der Quelldatenstrom konnte nicht geöffnet werden."));
+#ifndef QT_NO_DEBUG
+			qWarning(qPrintable(trUtf8("QFrankDatenstromfilter öffnen: Quelldatenstrom konnte nicht geöffnet werden","debug")));
+#endif
+		}
+	}
 	if(QuelldatenstromBereit)
 	{
 		setOpenMode(strommodus);
@@ -89,6 +112,19 @@ void QFrankDatenstromfilter::close()
 
 qint64 QFrankDatenstromfilter::readData(char *daten,qint64 maximaleLaenge)
 {
+	//Ist der Strom offen?? wenn nein öffnen
+	if(!isOpen())
+	{
+		//versuchen zu öffnen
+		if(!open(K_Quelldatenstrom->openMode()))
+		{
+#ifndef QT_NO_DEBUG
+			qWarning(qPrintable(trUtf8("QFrankDatenstromfilter lesen: der Filter konnte nicht geöffnet werden.","debug")));
+#endif
+			setErrorString(trUtf8("Stromfilter konnte nicht geöffnet werden."));
+			return -1;
+		}			
+	}
 #ifndef QT_NO_DEBUG
 	qDebug("QFrankDatenstromfilter: es sollen %i Bytes gelesen werden",(int)maximaleLaenge);
 #endif
@@ -127,6 +163,19 @@ qint64 QFrankDatenstromfilter::readData(char *daten,qint64 maximaleLaenge)
 
 qint64 QFrankDatenstromfilter::writeData(const char *daten, qint64 maximaleLaenge)
 {
+	//Ist der Strom offen?? wenn nein öffnen
+	if(!isOpen())
+	{
+		//versuchen zu öffnen
+		if(!open(K_Quelldatenstrom->openMode()))
+		{
+#ifndef QT_NO_DEBUG
+			qWarning(qPrintable(trUtf8("QFrankDatenstromfilter schreiben: der Filter konnte nicht geöffnet werden.","debug")));
+#endif
+			setErrorString(trUtf8("Stromfilter konnte nicht geöffnet werden."));
+			return -1;
+		}			
+	}
 #ifndef QT_NO_DEBUG
 	qDebug("QFrankDatenstromfilter: es sollen %i Bytes geschrieben werden",(int)maximaleLaenge);
 #endif

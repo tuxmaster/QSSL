@@ -176,9 +176,7 @@ bool QFrankSSLZertifikatspeicher::K_XMLLaden(QDomDocument *dokument,const QFrank
 			//Inhalt setzen entweder direkt oder vorher entschlüsselm
 			if(type==QFrankSSLZertifikatspeicher::Nutzer)
 			{
-				Datei.close();
 				QFrankDatenstromfilter Entschluesselung(&Datei,&K_Passwort);
-				Entschluesselung.open(QIODevice::ReadOnly);
 				if(!dokument->setContent(&Entschluesselung))
 				{
 					//Entschlüsseln gescheitert.
@@ -246,9 +244,7 @@ bool QFrankSSLZertifikatspeicher::K_XMLSpeichern(QDomDocument *dokument, const Q
 	if(ort==QFrankSSLZertifikatspeicher::Nutzer)
 	{
 		//mit
-		Datei.close();
 		QFrankDatenstromfilter Verschluesselung(&Datei,&K_Passwort);
-		Verschluesselung.open(QIODevice::WriteOnly);
 		if(Verschluesselung.write(dokument->toByteArray())==-1)
 		{
 			Verschluesselung.close();

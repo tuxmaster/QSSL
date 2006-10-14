@@ -64,7 +64,8 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_CRL_triggered()
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_SpeicherLoeschen_triggered()
 {
 	if(QMessageBox::question(this,tr("Sicherheitsabfrage"),trUtf8("Sind Sie sicher, das Sie den %1speicher löschen wollen?").
-									arg(K_SpeicherortGruppe->checkedButton()->text()),QMessageBox::No|QMessageBox::Escape,QMessageBox::Yes)==QMessageBox::No)
+									arg(K_SpeicherortGruppe->checkedButton()->text()),QMessageBox::Yes|QMessageBox::No,QMessageBox::No)
+							==QMessageBox::No)
 		return;
 	SSLSystem->Zertifikatsspeicher()->loeschen((QFrankSSLZertifikatspeicher::Speicherort)K_SpeicherortGruppe->checkedId());
 }
@@ -82,12 +83,12 @@ void QFrankZertkonfDlgHaupt::on_Menuepunkt_GPL_Lizenz_triggered()
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_ZertifikateAnzeigen_triggered()
 {
-	QMessageBox::information(this,"Testliste für Zerts",SSLSystem->Zertifikatsspeicher()->ListeAllerZertifikate(QFrankSSLZertifikatspeicher::CA).join(","));	
+	QMessageBox::information(this,trUtf8("Testliste für Zerts"),SSLSystem->Zertifikatsspeicher()->ListeAllerZertifikate(QFrankSSLZertifikatspeicher::CA).join(","));	
 }
 
 void QFrankZertkonfDlgHaupt::on_Menuepunkt_RueckruflistenAnzeigen_triggered()
 {
-	QMessageBox::information(this,"Testliste für Zerts",SSLSystem->Zertifikatsspeicher()->ListeAllerZertifikate(QFrankSSLZertifikatspeicher::CRL).join(","));
+	QMessageBox::information(this,trUtf8("Testliste für Zerts"),SSLSystem->Zertifikatsspeicher()->ListeAllerZertifikate(QFrankSSLZertifikatspeicher::CRL).join(","));
 }
 
 void QFrankZertkonfDlgHaupt::K_PasswortHohlen()

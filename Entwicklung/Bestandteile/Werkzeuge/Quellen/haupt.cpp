@@ -21,11 +21,12 @@
 
 int main(int anzahlArgumente, char *Argumente[]) 
 {
+	QT_REQUIRE_VERSION(anzahlArgumente, Argumente, "4.2.0")
 	QApplication Programm(anzahlArgumente,Argumente);
 	QTranslator QtSystem;
 	QTranslator Meine;
-	// Ein Gruss an die Doku von Qt 4.1
-	QtSystem.load("qt_" + QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+	// Ein Gruss an die Doku von Qt 4.2
+	QtSystem.load("qt_" + QLocale::system().name(),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
 	Meine.load("qsslkonfig_"+QLocale::system().name().left(QLocale::system().name().indexOf("_")),QLibraryInfo::location(QLibraryInfo::TranslationsPath));
 	//Meine.load("qsslkonfig_en","bin");
 	Programm.installTranslator(&QtSystem);
