@@ -35,7 +35,7 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	}
 	//Warnung bei DEBUG
 #ifndef QT_NO_DEBUG
-	qWarning(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!","debug").toLatin1().constData());
+	qWarning(qPrintable(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!","debug")));
 #endif
 	//Der 1. erstellt den Zertifikatsspeicher und initialisiert OpenSSL
 	if(K_Zertifikatspeicher==0)
@@ -100,7 +100,7 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 		K_OpenSSLFehlerText=K_KeineOpenSSLStrukturText+K_SSLFehlertext();
 #ifndef QT_NO_DEBUG
 		qCritical("QFrankSSL SSL Struktur aufbauen: OpenSSL Struktur fehlt");
-		qCritical(K_SSLFehlertext().toAscii().data());
+		qCritical(qPrintable(K_SSLFehlertext()));
 #endif
 		K_AllesZuruecksetzen();
 		return false;
@@ -158,7 +158,7 @@ void QFrankSSL::K_VerfuegbareAlgorithmenHohlen()
 	if(K_SSLStruktur==NULL)
 	{
 #ifndef QT_NO_DEBUG
-		qWarning(trUtf8("QFrankSSL verfügbare Algorithmen: keine gültige SSL Struktur","debug").toLatin1().constData());
+		qWarning(qPrintable(trUtf8("QFrankSSL verfügbare Algorithmen: keine gültige SSL Struktur","debug")));
 #endif
 		emit SSLFehler(K_KeineSSLStrukturText);
 		return;
@@ -175,7 +175,7 @@ void QFrankSSL::K_VerfuegbareAlgorithmenHohlen()
 	}
 	while(true);
 #ifndef QT_NO_DEBUG
-	qDebug(trUtf8("QFrankSSL verfügbare Algorithmen:\r\n%1","debug").arg(K_VerfuegbareAlgorithmen.join(":")).toLatin1().constData());
+	qDebug(qPrintable(trUtf8("QFrankSSL verfügbare Algorithmen:\r\n%1","debug").arg(K_VerfuegbareAlgorithmen.join(":"))));
 #endif	
 }
 
@@ -196,7 +196,7 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 	if(BytesDa==0)
 	{
 #ifndef QT_NO_DEBUG
-		qDebug(QString("\tEs sollen 0 Byte gelesen werde. Sinnlos.").toLatin1().constData());
+		qDebug("\tEs sollen 0 Byte gelesen werde. Sinnlos.");
 #endif
 		return;
 	}
@@ -220,14 +220,14 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 											K_EmpfangenenDaten.resize(K_SSL_Fehlercode);
 										emit DatenBereitZumAbhohlen(K_EmpfangenenDaten);
 #ifndef QT_NO_DEBUG
-										qDebug(QString("QFrankSSL: Daten:\r\n%1").arg(K_FeldNachHex(K_EmpfangenenDaten)).toLatin1().constData());
+										qDebug(qPrintable(QString("QFrankSSL: Daten:\r\n%1").arg(K_FeldNachHex(K_EmpfangenenDaten))));
 #endif
 									}
 									if(K_SSL_Fehlercode<0)
 									{
 										K_SSL_Fehlercode=SSL_get_error(K_SSLStruktur,K_SSL_Fehlercode);
 #ifndef QT_NO_DEBUG
-										qDebug(QString("\tSSL_Error ergab:%1").arg(K_SSL_Fehlercode).toLatin1().constData());
+										qDebug(qPrintable(QString("\tSSL_Error ergab:%1").arg(K_SSL_Fehlercode)));
 #endif									
 									}
 									
@@ -244,16 +244,16 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 									if(ServerAntwort.contains("server hello"))
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(trUtf8("QFrankSSL Daten empfangen: Bereit für den Handschake.\r\nAntwort vom Server: %1","debug").arg(ServerAntwort).
-																																				toLatin1().constData());
+										qDebug(qPrintable(trUtf8("QFrankSSL Daten empfangen: Bereit für den Handschake.\r\nAntwort vom Server: %1","debug")
+																.arg(ServerAntwort)));
 #endif
 										K_SSL_Handshake();
 									}
 									else
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(qPrintable(trUtf8("QFrankSSL Daten empfangen: Nicht bereit für den Handschake.\r\nAntwort vom Server: %1","debug").arg
-																																(ServerAntwort)));
+										qDebug(qPrintable(trUtf8("QFrankSSL Daten empfangen: Nicht bereit für den Handschake.\r\nAntwort vom Server: %1","debug")
+																.arg(ServerAntwort)));
 #endif
 									}
 									break;
@@ -274,7 +274,8 @@ void QFrankSSL::K_DatenKoennenGelesenWerden()
 									else
 									{
 #ifndef QT_NO_DEBUG
-										qDebug(qPrintable(QString("QFrankSSL Daten empfangen: Handshake gescheitert.\r\nAntwort vom Server: %1").arg(ServerAntwort)));
+										qDebug(qPrintable(QString("QFrankSSL Daten empfangen: Handshake gescheitert.\r\nAntwort vom Server: %1")
+																  .arg(ServerAntwort)));
 #endif
 									}
 									break;
@@ -306,7 +307,7 @@ void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &p
 	if(SSL_set_cipher_list(K_SSLStruktur,K_VerfuegbareAlgorithmen.join(":").toAscii().constData())==0)
 	{
 #ifndef QT_NO_DEBUG
-		qCritical(trUtf8("QFrankSSL kein gültiger Verschlüsselungsalgorithmus angegeben","debug").toLatin1().constData());
+		qCritical(qPrintable(trUtf8("QFrankSSL kein gültiger Verschlüsselungsalgorithmus angegeben","debug")));
 #endif
 		K_AllesZuruecksetzen();
 		//Liste löschen, da eh ungültig
@@ -330,14 +331,14 @@ void QFrankSSL::K_VerbindungZumServerGetrennt()
 const bool QFrankSSL::K_MussWasGesendetWerden()
 {
 #ifndef QT_NO_DEBUG
-	qDebug(trUtf8("QFrankSSL müssen wir Daten senden?","debug").toLatin1().constData());
+	qDebug(qPrintable(trUtf8("QFrankSSL müssen wir Daten senden?","debug")));
 #endif
 	//Wieviel daten warten auf  Bearbeitung?? >0 sind welche da
 	int warteneDaten=BIO_ctrl(K_Sendepuffer,BIO_CTRL_PENDING,0,NULL);
 	if (warteneDaten>0)
 	{
 #ifndef QT_NO_DEBUG
-		qDebug(QString("\tja %1 Bytes").arg(warteneDaten).toLatin1().constData());
+		qDebug(qPrintable(QString("\tja %1 Bytes").arg(warteneDaten)));
 #endif
 		return true;
 	}
@@ -359,7 +360,7 @@ void QFrankSSL::DatenSenden(const QByteArray &daten)
 		return;
 	}
 #ifndef QT_NO_DEBUG
-	qDebug(QString("QFrankSSL Daten Senden Daten: \r\n%1").arg(K_FeldNachHex(daten)).toLatin1().constData());
+	qDebug(qPrintable(QString("QFrankSSL Daten Senden Daten: \r\n%1").arg(K_FeldNachHex(daten))));
 #endif
 	SSL_write(K_SSLStruktur,daten.data(),daten.size());
 	if(K_MussWasGesendetWerden())
@@ -465,7 +466,7 @@ void QFrankSSL::VerbindungTrennen()
 void QFrankSSL::K_AllesZuruecksetzen()
 {	
 #ifndef QT_NO_DEBUG
-	qDebug(trUtf8("QFrankSSL alles zurücksetzen","debug").toLatin1().constData());
+	qDebug(qPrintable(trUtf8("QFrankSSL alles zurücksetzen","debug")));
 #endif
 	if(state()==QAbstractSocket::ConnectedState)
 		disconnectFromHost();
@@ -491,7 +492,7 @@ const bool QFrankSSL::K_OpenSSLMitBugs()const
 	if(SSLeay()==0x00090703f)
 	{
 #ifndef QT_NO_DEBUG
-		qCritical(trUtf8("QFrankSSL Bugprüfung: 0.9.7c gefunden!!!","debug").toLatin1().constData());
+		qCritical(qPrintable(trUtf8("QFrankSSL Bugprüfung: 0.9.7c gefunden!!!","debug")));
 #endif
 		emit SSLFehler(trUtf8("Die installierte OpenSSL Version: %1 enthält Bugs.\r\nWeitere Hinweise entnehmen Sie bitte der Datei Hinweise.txt")
 								.arg(SSLeay_version(SSLEAY_VERSION)));
@@ -541,7 +542,7 @@ void QFrankSSL::K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe)
 	*/
 	//int Wo=wo&~SSL_ST_MASK;
 	if(!K_ListeDerSSLVerbindungen.contains(ssl))
-		qFatal(QString("QFrankSSL SSL_Info_Callback: Das SSL Objekt befindet sich nicht in der Tabelle!!").toLatin1().constData());
+		qFatal("QFrankSSL SSL_Info_Callback: Das SSL Objekt befindet sich nicht in der Tabelle!!");
 	qDebug("wo=0x%X",wo);
 	switch(wo)
 	{
@@ -549,7 +550,7 @@ void QFrankSSL::K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe)
 #ifndef QT_NO_DEBUG
 								qDebug("QFrankSSL SSL_Info_Callback: meldet ein Fehler");
 #endif
-								qDebug(QString("%1").arg(rueckgabe).toLatin1().constData());
+								qDebug(qPrintable(QString("%1").arg(rueckgabe)));
 								break;
 		case SSL_CB_READ_ALERT:
 		case SSL_CB_WRITE_ALERT:

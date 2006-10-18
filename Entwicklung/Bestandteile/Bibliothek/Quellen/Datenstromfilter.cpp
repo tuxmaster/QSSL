@@ -154,7 +154,7 @@ qint64 QFrankDatenstromfilter::readData(char *daten,qint64 maximaleLaenge)
 			Entschluesselt=Entschluesselt+EntschluesseltEntgueltig;
 #ifndef QT_NO_DEBUG
 			qDebug(qPrintable(trUtf8("QFrankDatenstromfilter: es wurden %1 Bytes entschlüsselt","debug").arg(Entschluesselt)));
-			qDebug(qPrintable(QString("\tDaten: %1").arg(QString(QByteArray(daten,Entschluesselt)))));
+			//qDebug(qPrintable(QString("\tDaten: %1").arg(QString(QByteArray(daten,Entschluesselt)))));
 #endif
 		}
 	}
@@ -203,7 +203,7 @@ qint64 QFrankDatenstromfilter::writeData(const char *daten, qint64 maximaleLaeng
 #ifndef QT_NO_DEBUG
 			Verschluesselt=Verschluesselt+VerschluesseltEntgueltig;
 			qDebug(qPrintable(trUtf8("QFrankDatenstromfilter: es wurden %1 Bytes verschlüsselt","debug").arg(Verschluesselt)));
-			qDebug(qPrintable(QString("\tDaten: %1").arg(K_FeldNachHex(Puffer))));
+			//qDebug(qPrintable(QString("\tDaten: %1").arg(K_FeldNachHex(Puffer))));
 #endif
 			//Datenauf den Datenträger schreiben.
 			return K_Quelldatenstrom->write(Puffer);
