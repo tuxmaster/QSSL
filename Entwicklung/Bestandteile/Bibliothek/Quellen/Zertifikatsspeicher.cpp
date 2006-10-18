@@ -22,10 +22,10 @@
 #include <openssl/pem.h>
 
 //Den Filter brauchen wir nur unter nicht Windows Sytemen, da wir unter Windows den Systemeigenen nutzen.
-//#ifndef Q_WS_WIN
+#ifndef Q_WS_WIN
 #include "Datenstromfilter.h"
 #include <QtXml>
-//#endif
+#endif
 
 QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObject(eltern)
 {
@@ -33,7 +33,7 @@ QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObjec
 #ifndef QT_NO_DEBUG
 	qWarning(qPrintable(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!","debug")));
 #endif
-//#ifndef Q_WS_WIN
+#ifndef Q_WS_WIN
 	QSettings EinstellungenSystem(QSettings::IniFormat,QSettings::SystemScope,"QSSL","tmp");
 	QSettings EinstellungenNutzer(QSettings::IniFormat,QSettings::UserScope,"QSSL","tmp");
 	K_DateinameSystem=EinstellungenSystem.fileName().left(EinstellungenSystem.fileName().lastIndexOf("/"))+"/Zertifikate.db";
@@ -43,7 +43,7 @@ QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObjec
 #ifndef QT_NO_DEBUG
 	qDebug(qPrintable(QString("Ablageort des Zertifikatsspeichers:\r\n\tSystemweit:%1\r\n\tBenutzer:%2").arg(K_DateinameSystem).arg(K_DateinameBenutzer)));
 #endif
-//#endif
+#endif
 	K_Speichergeladen=false;	
 }
 
@@ -73,7 +73,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden()
 		emit Fehler(tr("Der Zertifikatsspeicher wurde bereits geladen"));
 		return;
 	}
-//#ifndef Q_WS_WIN
+#ifndef Q_WS_WIN
 	if(!K_PasswortGesetzt)
 	{
 		//Passwort für den Nutzerspeicher abfragen
@@ -137,6 +137,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden()
 		return;
 	}
 	K_PasswortLoeschen();
+#endif
 }
 
 const QStringList QFrankSSLZertifikatspeicher::ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type)const
@@ -151,7 +152,7 @@ void QFrankSSLZertifikatspeicher::K_SpeichertypeTextSetzen(const QFrankSSLZertif
 		K_SpeichertypeText=tr("System");
 }
 
-//#ifndef Q_WS_WIN
+#ifndef Q_WS_WIN
 bool QFrankSSLZertifikatspeicher::K_XMLLaden(QDomDocument *dokument,const QFrankSSLZertifikatspeicher::Speicherort &type)
 {
 	K_SpeichertypeTextSetzen(type);
@@ -653,4 +654,4 @@ void QFrankSSLZertifikatspeicher::K_PasswortLoeschen()
 	K_PasswortGesetzt=false;
 	K_ZertspeicherAktion=QFrankSSLZertifikatspeicher::Nichts;
 }
-//#endif
+#endif

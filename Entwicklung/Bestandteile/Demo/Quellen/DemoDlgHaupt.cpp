@@ -150,12 +150,14 @@ void QFrankDlgHaupt::K_TunnelAufgebaut()
 
 }
 
+#ifndef Q_WS_WIN
 void QFrankDlgHaupt::K_PasswortAbfragen()
 {
 	K_SSL->Zertifikatsspeicher()->PasswortFuerDenSpeicher(QInputDialog::getText(this,tr("Passwortabfrage"),trUtf8("Bitte geben Sie das Passwort für den"
 																													"Zertifikatspeicher ein."),
 															QLineEdit::NoEcho,QString(),0,(Qt::WFlags)Qt::Widget^Qt::WindowTitleHint));
 }
+#endif
 
 void QFrankDlgHaupt::K_VerbindungGetrennt(const bool &mitFehler)
 {

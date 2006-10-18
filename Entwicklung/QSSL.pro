@@ -16,16 +16,7 @@
 
 TEMPLATE       =subdirs
 
-win32 {
-        PFAD = $$system(echo %CD%)
-	system(echo $$PFAD >$$(TMP)/x.x)
-}
-else {
-        PFAD = $$system(pwd)
-	system(echo $$PFAD >/tmp/x.x)
-}
-SUBDIRS		=  Bestandteile/Bibliothek
-//!win32:SUBDIRS += Bestandteile/Werkzeuge
-SUBDIRS		+= Bestandteile/Werkzeuge\ 
-			   Bestandteile/Demo
+SUBDIRS			=  Bestandteile/Bibliothek
+!win32:SUBDIRS	+= Bestandteile/Werkzeuge
+SUBDIRS			+= Bestandteile/Demo
 				

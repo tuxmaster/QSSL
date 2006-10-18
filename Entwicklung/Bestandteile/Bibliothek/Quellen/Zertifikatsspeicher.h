@@ -46,12 +46,12 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				const QStringList	ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type)const;
 				enum				ArtDesSpeichers{System=0x01,Nutzer=0x02};
 				Q_DECLARE_FLAGS(Speicherort,ArtDesSpeichers)
-//#ifndef Q_WS_WIN
+#ifndef Q_WS_WIN
 				void				PasswortFuerDenSpeicher(QString &passwort);
 				void				ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
 														const QFrankSSLZertifikatspeicher::Zertifikatstype &type,const QString &datei);
 				void				loeschen(const QFrankSSLZertifikatspeicher::Speicherort &ort);
-//#endif
+#endif
 
 	public slots:				
 				void				SpeicherLaden();
@@ -59,15 +59,15 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 	signals:
 				void				Fehler(const QString &fehlertext)const;
 				void				Warnung(const QString &warnungstext)const;
-//#ifndef Q_WS_WIN
+#ifndef Q_WS_WIN
 				void				PasswortFuerDenSpeicherHohlen()const;
-//#endif
+#endif
 
 	private:
 				bool 				K_Speichergeladen;
 				QString				K_SpeichertypeText;
 				void				K_SpeichertypeTextSetzen(const QFrankSSLZertifikatspeicher::Speicherort &type);
-//#ifndef Q_WS_WIN
+#ifndef Q_WS_WIN
 				enum				LadenOderSpeichern{Laden=0x01,Speichern=0x02,Nichts=0x03};
 				Q_DECLARE_FLAGS(LadenSpeichern,LadenOderSpeichern)
 				QFrankSSLZertifikatspeicher::LadenSpeichern		K_ZertspeicherAktion;
@@ -87,6 +87,6 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				bool				K_XMListZertspeicher(QDomDocument *xml);
 				bool				K_XMLEintragLesen(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,QDomNode *eintrag);
 				bool				K_XMLEintragSchreiben(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,const QString &quellDatei,QDomDocument *xml);
-//#endif
+#endif
 };
 #endif

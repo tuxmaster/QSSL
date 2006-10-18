@@ -22,19 +22,12 @@ QT		+= network
 Debuginfos	= ja
 #strip unter unix/mingw? ja/nein
 Strip		= nein
-isEmpty(PFAD) {
-	win32 {
-			PFAD=$$system(type $$(TMP)"\x.x")
-} else {
-		PFAD=$$system(cat /tmp/x.x)
-}
-}
-DESTDIR		= $$PFAD/bin
-MOC_DIR		= $$PFAD/tmp/moc
-OBJECTS_DIR	= $$PFAD/tmp/obj
-UI_HEADERS_DIR	= $$PFAD/tmp/ui_headers
-RCC_DIR		= $$PFAD/tmp/resourcen
 
+DESTDIR		= ../../bin
+MOC_DIR		= ../../tmp/moc
+OBJECTS_DIR		= ../../tmp/obj
+UI_HEADERS_DIR	= ../../tmp/ui_headers
+RCC_DIR		= ../../tmp/resourcen
 
 contains(Debuginfos, ja) {
 	message(Erstelle $$PROJEKTTEIL mit Debugmeldungen)

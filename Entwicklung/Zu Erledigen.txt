@@ -1,0 +1,2 @@
+Laden der Zertifikate aus dem Windows Speicher.
+Übergabe der Zertifke aus Windows/Zertspeicher an OpenSSL
