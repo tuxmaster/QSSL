@@ -79,6 +79,8 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				QString				K_DateinameSystem;
 				QString				K_Passwort;
 				bool				K_PasswortGesetzt;
+				bool				K_ZertifikatsdateiLaden(const QString &quellDatei,QByteArray &daten);
+				bool				K_FeldNachZert(QByteArray &feld,const QFrankSSLZertifikatspeicher::Zertifikatstype &type,bool wandeln=false);
 				bool				K_XMLLaden(QDomDocument *dokument,const QFrankSSLZertifikatspeicher::Speicherort &type);
 				bool				K_XMLSpeichern(QDomDocument *dokument,const QFrankSSLZertifikatspeicher::Speicherort &ort);
 				bool				K_XMLBearbeiten(QDomDocument *xml);

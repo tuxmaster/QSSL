@@ -98,7 +98,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden()
 		}
 #ifndef QT_NO_DEBUG
 				qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
-				qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
+				//qDebug("Inhalt: %s",qPrintable(Speicher->toString()));
 #endif
 			
 		K_Speichergeladen=true;
@@ -331,11 +331,12 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 	QDomElement Element;
 	X509 *Zertifikat;
 	X509_CRL *Rueckrufliste;
+	bool Fehler=false;
 	while(!eintrag->isNull())
 	{
 		Element=eintrag->toElement();
 #ifndef QT_NO_DEBUG
-		qDebug(qPrintable(QString("Inhalt des Elements: %1").arg(Element.text())));
+		qDebug(qPrintable(QString("Inhalt des Elements: %1").arg(Element.text())));		
 #endif
 		DatenDesEintrags=QByteArray::fromBase64(Element.text().toAscii());
 		BIO_reset(Puffer);
@@ -346,20 +347,35 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 		switch(type)
 		{
 			case QFrankSSLZertifikatspeicher::CRL:
-													if(!PEM_read_bio_X509_CRL(Puffer,&Rueckrufliste,0,NULL))
+													//if(!PEM_read_bio_X509_CRL(Puffer,&Rueckrufliste,0,NULL))
+													if(d2i_X509_CRL_bio(Puffer,&Rueckrufliste)==NULL)
 													{
 #ifndef QT_NO_DEBUG
 														qDebug("CRL konnte nicht gelesen werden");
 #endif	
+														Fehler=true;
 														break;
 													}
+#ifndef QT_NO_DEBUG
+													BIO_reset(Puffer);
+													if(X509_CRL_print(Puffer,Rueckrufliste)==1)
+													{
+														QByteArray Zerttext;
+														int Groesse=BIO_ctrl(Puffer,BIO_CTRL_PENDING,0,NULL);
+														Zerttext.resize(Groesse);
+														BIO_read(Puffer,Zerttext.data(),Groesse);
+														qDebug(qPrintable(QString("CRL Element dekodiert: %1").arg(QString(Zerttext))));
+													}													
+#endif
 													break;
 			case QFrankSSLZertifikatspeicher::CA:
-													if(!PEM_read_bio_X509(Puffer,&Zertifikat,0,NULL))
+													if(d2i_X509_bio(Puffer,&Zertifikat)==NULL)
+													//if(!PEM_read_bio_X509(Puffer,&Zertifikat,0,NULL))
 													{
 #ifndef QT_NO_DEBUG
 														qDebug("CA konnte nicht gelesen werden");
 #endif													
+														Fehler=true;
 														break;
 													}
 #ifndef QT_NO_DEBUG
@@ -387,7 +403,7 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 			X509_CRL_free(Rueckrufliste);
 	}
 	BIO_free(Puffer);
-	return true;
+	return !Fehler;
 }
 
 
@@ -439,25 +455,161 @@ void QFrankSSLZertifikatspeicher::ZertifikatSpeichern(const QFrankSSLZertifikats
 
 bool QFrankSSLZertifikatspeicher::K_XMLEintragSchreiben(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,const QString &quellDatei,QDomDocument *xml)
 {
+	QByteArray EintragWert;
+	if(!K_ZertifikatsdateiLaden(quellDatei,EintragWert))
+	{
+		emit Fehler(tr("Die Datei %1 konnte nicht ausgelesen werden.").arg(quellDatei));
+		return false;
+	}
+	//Datei in ein DER Zert/CRL wandeln
+	if(!K_FeldNachZert(EintragWert,type,true))
+		return false;
 	QDomElement Wurzel=xml->documentElement();
-	QString Eintragtext;
+	QString EintragtypeBezeichnung;
 	switch(type)
 	{
 		case QFrankSSLZertifikatspeicher::CRL:
-												Eintragtext="CRL";
+												EintragtypeBezeichnung="CRL";
 												break;
 		case QFrankSSLZertifikatspeicher::CA:
-												Eintragtext="CA";
+												EintragtypeBezeichnung="CA";
 												break;
 		default:
 												qFatal(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Eintrag schreiben: unzulässiger Eintragstype","debug")));
 												break;
 	}
-	QDomElement Eintrag=xml->createElement(Eintragtext);
-	Wurzel.appendChild(Eintrag);
-	QDomText Inhalt = xml->createTextNode("TestText");
+	QDomElement Type=xml->createElement(EintragtypeBezeichnung);
+	Wurzel.appendChild(Type);
+	QDomElement Eintrag=xml->createElement("Daten");
+	Type.appendChild(Eintrag);
+	QDomText Inhalt = xml->createTextNode(EintragWert.toBase64());
 	Eintrag.appendChild(Inhalt);
 	return true;
+}
+
+bool QFrankSSLZertifikatspeicher::K_FeldNachZert(QByteArray &feld,const QFrankSSLZertifikatspeicher::Zertifikatstype &type,bool wandeln)
+{
+	//Zuerst versuchen wir es mit einer DER Kodierung, dann mit einer PEM
+	X509 *Zertifikat;
+	X509_CRL *Rueckrufliste;
+	BIO *Puffer = BIO_new(BIO_s_mem());
+	Rueckrufliste=NULL;
+	Zertifikat=NULL;
+	if(BIO_write(Puffer,feld.data(),feld.size())!=feld.size())
+			qFatal("K_FeldNachZert es wurde nicht alle Bytes in den OpenSSL Puffer geschrieben");
+	bool Fehler=false;
+	switch(type)
+	{
+		case QFrankSSLZertifikatspeicher::CRL:
+												if(!d2i_X509_CRL_bio(Puffer,&Rueckrufliste))
+												{
+#ifndef QT_NO_DEBUG
+													qDebug("QFrankSSLZertifikatspeicher FeldNachZert: CRL war nicht DER kodiert, versuche PEM");
+#endif
+													BIO_reset(Puffer);
+													if(BIO_write(Puffer,feld.data(),feld.size())!=feld.size())
+														qFatal("K_FeldNachZert es wurde nicht alle Bytes in den OpenSSL Puffer geschrieben");
+													if(!PEM_read_bio_X509_CRL(Puffer,&Rueckrufliste,0,NULL))
+													{
+#ifndef QT_NO_DEBUG
+														qDebug("QFrankSSLZertifikatspeicher FeldNachZert: CRL war nicht PEM kodiert, das wars");
+#endif
+														Fehler=true;
+														emit QFrankSSLZertifikatspeicher::Fehler(trUtf8("Die Rückrufliste, war weder im DER noch im PEM Format."));
+														break;
+													}
+												}
+												else
+													break;
+												//wandeln nach DER wenn gewünscht, da CRL im PEM Format
+												if(wandeln)
+												{
+													BIO_reset(Puffer);
+													if(i2d_X509_CRL_bio(Puffer,Rueckrufliste)!=1)
+													{
+#ifndef QT_NO_DEBUG
+														qDebug("QFrankSSLZertifikatspeicher FeldNachZert: wandeln nicht erfolgreich");
+#endif
+														Fehler=true;
+														emit QFrankSSLZertifikatspeicher::Fehler(trUtf8("Die Rückrufliste konnte nicht in das DER Format "
+																										"konvertiert werden."));
+													}
+													else
+													{
+														//Kovertierung ok
+														int warteneBytes=BIO_ctrl(Puffer,BIO_CTRL_PENDING,0,NULL);
+														feld.resize(warteneBytes);
+														if(BIO_read(Puffer,feld.data(),warteneBytes)!=warteneBytes)
+															qFatal("K_FeldNachZert es wurden nicht alle Bytes aus dem OpenSSL Puffer gelesen");
+													}
+												}
+												break;
+		case QFrankSSLZertifikatspeicher::CA:
+												if(!d2i_X509_bio(Puffer,&Zertifikat))
+												{
+#ifndef QT_NO_DEBUG
+													qDebug("QFrankSSLZertifikatspeicher FeldNachZert: CA war nicht DER kodiert, versuche PEM");
+#endif
+													BIO_reset(Puffer);
+													if(BIO_write(Puffer,feld.data(),feld.size())!=feld.size())
+														qFatal("K_FeldNachZert es wurde nicht alle Bytes in den OpenSSL Puffer geschrieben");
+													if(!PEM_read_bio_X509(Puffer,&Zertifikat,0,NULL))
+													{
+#ifndef QT_NO_DEBUG
+														qDebug("QFrankSSLZertifikatspeicher FeldNachZert: CA war nicht PEM kodiert, das wars");
+#endif
+														Fehler=true;
+														emit QFrankSSLZertifikatspeicher::Fehler(tr("Das Zertifikat, war weder im DER noch im PEM Format."));
+														break;
+													}
+												}
+												else
+													break;
+												//wandeln nach DER wenn gewünscht, da Zert im PEM Format
+												if(wandeln)
+												{
+													BIO_reset(Puffer);
+													if(i2d_X509_bio(Puffer,Zertifikat)!=1)
+													{
+#ifndef QT_NO_DEBUG
+														qDebug("QFrankSSLZertifikatspeicher FeldNachZert: wandeln nicht erfolgreich");
+#endif
+														Fehler=true;
+														emit QFrankSSLZertifikatspeicher::Fehler(tr("Das Zertifikat konnte nicht in das DER Format "
+																									"konvertiert werden."));
+													}
+													else
+													{
+														//Kovertierung ok
+														int warteneBytes=BIO_ctrl(Puffer,BIO_CTRL_PENDING,0,NULL);
+														feld.resize(warteneBytes);
+														if(BIO_read(Puffer,feld.data(),warteneBytes)!=warteneBytes)
+															qFatal("K_FeldNachZert es wurden nicht alle Bytes aus dem OpenSSL Puffer gelesen");
+													}
+												}
+												break;
+		default:
+												qFatal(qPrintable(trUtf8("QFrankSSLZertifikatspeicher FeldNachZert: unzulässiger Eintragstype","debug")));
+												break;
+	}
+	if(Zertifikat!=NULL)
+		X509_free(Zertifikat);
+	if(Rueckrufliste!=NULL)
+		X509_CRL_free(Rueckrufliste);
+	BIO_free(Puffer);
+	return !Fehler;
+}
+
+bool QFrankSSLZertifikatspeicher::K_ZertifikatsdateiLaden(const QString &quellDatei,QByteArray &daten)
+{
+	QFile Datei(quellDatei);
+	if(Datei.open(QIODevice::ReadOnly))
+	{
+		daten=Datei.readAll();
+		if(!daten.isNull())
+			return true;
+	}
+	return false;
 }
 
 void QFrankSSLZertifikatspeicher::loeschen(const QFrankSSLZertifikatspeicher::Speicherort &ort)
