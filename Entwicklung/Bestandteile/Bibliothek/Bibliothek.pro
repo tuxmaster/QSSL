@@ -16,15 +16,16 @@
 
 PROJEKTTEIL	= Bibliothek
 TEMPLATE	= lib
+!win32::QT += xml
 CONFIG		+= dll
-QT			+= xml
+
 include (../../Vorgaben.pri)
 VERSION		= 0.1.0
 TARGET		= qssl
 win32{
 	DEFINES		+= DLL_BAUEN	
 	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8d/include
-	LIBS		+= -L../../../../../OpenSSL/0.9.8d/lib -lssleay32 -llibeay32
+	LIBS		+= -L../../../../../OpenSSL/0.9.8d/lib -lssleay32 -llibeay32 -lCrypt32
 }
 unix{
 	INCLUDEPATH	+= /usr/include

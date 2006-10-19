@@ -49,11 +49,12 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 					void		on_txtDebug_textChanged();
 					void		on_txtFehler_textChanged();
 					void		on_txtEmpfangen_textChanged();
-					void		K_EsGabEinFehler(const QString & fehlertext);
+					void		K_EsGabEinFehler(const QString &fehlertext);
 					void		K_DatenSindDa(const QByteArray &daten);
 					void		K_TunnelAufgebaut();
 					void		K_VerbindungGetrennt(const bool &mitFehler);
 					void		K_ZertifikateLaden();
+					void		K_SpeicherFehlerWarnung(const QString &text);
 #ifndef Q_WS_WIN
 					void		K_PasswortAbfragen();
 #endif

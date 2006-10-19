@@ -25,6 +25,9 @@
 #ifndef Q_WS_WIN
 #include "Datenstromfilter.h"
 #include <QtXml>
+#else
+#include <windows.h>
+#include <Wincrypt.h>
 #endif
 
 QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObject(eltern)
@@ -55,8 +58,6 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden()
 		<Zertifikatsspeicher>
 			<CRL>
 					<Daten>Base64 Daten der 1. CRL</Daten>
-					.
-					.
 					<Daten>Base64 Daten der n. CRL</Daten>
 			</CRL>
 			<CA>
@@ -64,6 +65,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden()
 					<Daten>Babe64 Daten der n. CA</Daten>
 			<CA>
 		</Zertifikatsspeicher>
+		Die Einträge CRL und CA können beliebig oft auftreten
 	*/
 	if(K_Speichergeladen)
 	{
@@ -73,6 +75,7 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden()
 		emit Fehler(tr("Der Zertifikatsspeicher wurde bereits geladen"));
 		return;
 	}
+	// Unix/Linux/Mac Speicher
 #ifndef Q_WS_WIN
 	if(!K_PasswortGesetzt)
 	{
@@ -137,6 +140,32 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden()
 		return;
 	}
 	K_PasswortLoeschen();
+#else
+	//Windows Speicher
+	if(!K_SpeicherLaden(QFrankSSLZertifikatspeicher::System))
+	{
+#ifndef QT_NO_DEBUG
+			qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: laden des Systemspeichers gescheitert","debug")));
+#endif
+			emit Fehler(trUtf8("Der Zertifikatspeicher des Systems konnte nicht geladen werden."));
+	}
+	else
+	{
+#ifndef QT_NO_DEBUG
+		qDebug("QFrankSSLZertifikatspeicher Laden: Nutzerpeicher geladen.");
+#endif
+		if(!K_SpeicherLaden(QFrankSSLZertifikatspeicher::Nutzer))
+		{
+#ifndef QT_NO_DEBUG
+			qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: laden des Nutzerpeichers gescheitert","debug")));
+#endif
+			emit Fehler(tr("Der Zertifikatspeicher des Nutzers konnte nicht geladen werden."));
+		}
+#ifndef QT_NO_DEBUG
+		else
+			qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
+#endif
+	}
 #endif
 }
 
@@ -153,6 +182,7 @@ void QFrankSSLZertifikatspeicher::K_SpeichertypeTextSetzen(const QFrankSSLZertif
 }
 
 #ifndef Q_WS_WIN
+
 bool QFrankSSLZertifikatspeicher::K_XMLLaden(QDomDocument *dokument,const QFrankSSLZertifikatspeicher::Speicherort &type)
 {
 	K_SpeichertypeTextSetzen(type);
@@ -653,5 +683,35 @@ void QFrankSSLZertifikatspeicher::K_PasswortLoeschen()
 	K_Passwort.clear();
 	K_PasswortGesetzt=false;
 	K_ZertspeicherAktion=QFrankSSLZertifikatspeicher::Nichts;
+}
+#else
+bool QFrankSSLZertifikatspeicher::K_SpeicherLaden(const QFrankSSLZertifikatspeicher::Speicherort &type)
+{
+	K_SpeichertypeTextSetzen(type);
+	//CERT_STORE_PROV_SYSTEM_A = Alle vorhandene Zerts
+	//Sytstem CERT_SYSTEM_STORE_LOCAL_MACHINE
+	//Nutzer CERT_SYSTEM_STORE_CURRENT_USER
+	HCERTSTORE  Zertifikatsspeicher;
+	QString Speicher;
+	if(type==QFrankSSLZertifikatspeicher::Nutzer)
+		Speicher="My";
+	else
+		Speicher="Root";
+	Zertifikatsspeicher=CertOpenStore(CERT_STORE_PROV_SYSTEM,X509_ASN_ENCODING,NULL,CERT_STORE_READONLY_FLAG,Speicher.utf16());
+	if(Zertifikatsspeicher==NULL)
+	{
+#ifndef QT_NO_DEBUG
+		DWORD Fehlerkode=GetLastError();
+		qDebug("Fehler: %d",Fehlerkode);
+		qCritical(qPrintable(QString("QFrankSSLZertifikatspeicher K_SpeicherLaden: %1speicher laden fehlgeschalgen").arg(K_SpeichertypeText)));
+#endif
+		return false;
+	}
+	if(!CertCloseStore(Zertifikatsspeicher,CERT_CLOSE_STORE_FORCE_FLAG))
+		qFatal(qPrintable(trUtf8("QFrankSSLZertifikatspeicher K_SpeicherLaden: konnte den %1speicher nicht schließen.").arg(K_SpeichertypeText)));
+#ifndef QT_NO_DEBUG
+	qDebug(qPrintable(QString("QFrankSSLZertifikatspeicher K_SpeicherLaden: %1speicher geladen").arg(K_SpeichertypeText)));
+#endif
+	return true;
 }
 #endif

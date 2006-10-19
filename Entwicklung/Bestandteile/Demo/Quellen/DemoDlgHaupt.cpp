@@ -32,6 +32,8 @@ QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 	qInstallMsgHandler(QtNachrichten);
 	K_SSL=new QFrankSSL(this);
 	connect(K_SSL,SIGNAL(SSLFehler(const QString)),this,SLOT(K_EsGabEinFehler(const QString&)));
+	connect(K_SSL->Zertifikatsspeicher(),SIGNAL(Fehler(const QString&)),this,SLOT(K_SpeicherFehlerWarnung(const QString&)));
+	connect(K_SSL->Zertifikatsspeicher(),SIGNAL(Warnung(const QString&)),this,SLOT(K_SpeicherFehlerWarnung(const QString&)));
 	connect(K_SSL,SIGNAL(DatenBereitZumAbhohlen(const QByteArray&)),this,SLOT(K_DatenSindDa(const QByteArray&)));
 	connect(K_SSL,SIGNAL(TunnelBereit()),this,SLOT(K_TunnelAufgebaut()));
 	connect(K_SSL,SIGNAL(VerbindungGetrennt(const bool)),this,SLOT(K_VerbindungGetrennt(const bool&)));
@@ -141,6 +143,11 @@ void QFrankDlgHaupt::K_EsGabEinFehler(const QString & fehlertext)
 	on_sfVerbinden_released();
 	sfVerbinden->setEnabled(true);
 	sfSenden->setEnabled(false);
+}
+
+void QFrankDlgHaupt::K_SpeicherFehlerWarnung(const QString &text)
+{
+	QMessageBox::warning(this,tr("Zertspeicher Warnung/Fehler"),text);
 }
 
 void QFrankDlgHaupt::K_TunnelAufgebaut()
