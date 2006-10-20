@@ -22,19 +22,21 @@
 
 #include <QtCore>
 
-//Unter Windows  braucht man Hilfe beim Exportieren
 #ifdef Q_WS_WIN 
+	#include <windows.h>
+	#include <Wincrypt.h>
+	//Unter Windows  braucht man Hilfe beim Exportieren
 	#ifdef DLL_BAUEN
 		#define DLL_EXPORT __declspec(dllexport)
 	#else
 		#define DLL_EXPORT __declspec(dllimport)
 	#endif
 #else
-		#define DLL_EXPORT
+	//Nicht Windows Systeme brauchen ja den XML Speicher;
+	class QDomDocument;
+	class QDomNode;
+	#define DLL_EXPORT
 #endif
-
-class QDomDocument;
-class QDomNode;
 
 class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 {
@@ -94,6 +96,8 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 #else
 				// Windows Speicher
 				bool				K_SpeicherLaden(const QFrankSSLZertifikatspeicher::Speicherort &type);
+				static BOOL	WINAPI 	CertEnumSystemStoreRueckruf(const void *speicherplatz,DWORD parameter,PCERT_SYSTEM_STORE_INFO speicherInfos,
+																void *reserviert,void *hilfsparameter);
 #endif
 
 };

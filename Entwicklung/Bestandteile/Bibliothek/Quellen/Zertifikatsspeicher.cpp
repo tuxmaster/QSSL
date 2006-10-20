@@ -25,9 +25,6 @@
 #ifndef Q_WS_WIN
 #include "Datenstromfilter.h"
 #include <QtXml>
-#else
-#include <windows.h>
-#include <Wincrypt.h>
 #endif
 
 QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObject(eltern)
@@ -377,7 +374,7 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 													}
 #ifndef QT_NO_DEBUG
 													qDebug(qPrintable(QString("CRL Element dekodiert: %1")
-																			  .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,Rueckrufliste)))));		
+																			  .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,Rueckrufliste))));		
 #endif
 													break;
 			case QFrankSSLZertifikatspeicher::CA:
@@ -392,7 +389,7 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 													}
 #ifndef QT_NO_DEBUG
 													qDebug(qPrintable(QString("CA Element dekodiert: %1")
-																			 .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,Rueckrufliste))));
+																			 .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,Zertifikat))));
 #endif
 													break;
 			case QFrankSSLZertifikatspeicher::Zert:
@@ -667,17 +664,21 @@ bool QFrankSSLZertifikatspeicher::K_SpeicherLaden(const QFrankSSLZertifikatspeic
 	//Nutzer CERT_SYSTEM_STORE_CURRENT_USER
 	DWORD Speicherort;
 	HCERTSTORE  Zertifikatsspeicher;
-	QString Speicher;
+	QStringList NameDerUnterspeicher;
 	if(type==QFrankSSLZertifikatspeicher::Nutzer)
-	{
-		Speicher="My";
 		Speicherort=CERT_SYSTEM_STORE_CURRENT_USER;
-	}
 	else
-	{
-		Speicher="Root";
 		Speicherort=CERT_SYSTEM_STORE_LOCAL_MACHINE;
+	//Jeder Speicherort enthält eine unbekannte anzahl Unterspeicher.
+	if(!CertEnumSystemStore(Speicherort,NULL,&NameDerUnterspeicher,CertEnumSystemStoreRueckruf))
+	{
+		qWarning("QFrankSSLZertifikatspeicher K_SpeicherLaden: konnte die einzelnen unterspeicher nicht ermitteln");
+		return false;
 	}
+#ifndef QT_NO_DEBUG
+	qDebug(qPrintable(QString("QFrankSSLZertifikatspeicher K_SpeicherLaden: gefundene Unterspeicher: %1").arg(NameDerUnterspeicher.join(","))));
+#endif
+	/*
 	Zertifikatsspeicher=CertOpenStore(CERT_STORE_PROV_SYSTEM,X509_ASN_ENCODING,NULL,CERT_STORE_READONLY_FLAG|Speicherort,Speicher.utf16());
 	if(Zertifikatsspeicher==NULL)
 	{
@@ -689,40 +690,80 @@ bool QFrankSSLZertifikatspeicher::K_SpeicherLaden(const QFrankSSLZertifikatspeic
 		return false;
 	}
 	//Auslesen
-	PCCERT_CONTEXT  Zertifikat=CertFindCertificateInStore(Zertifikatsspeicher,X509_ASN_ENCODING,0,CERT_FIND_ANY,NULL,NULL);
+	//PCCERT_CONTEXT  Zertifikat=CertFindCertificateInStore(Zertifikatsspeicher,X509_ASN_ENCODING,0,CERT_FIND_ANY,NULL,NULL);
+	PCCERT_CONTEXT  Zertifikat=CertEnumCertificatesInStore(Zertifikatsspeicher,NULL);
+	//PCCRL_CONTEXT	Rueckrufliste=CertFindCRLInStore(Zertifikatsspeicher,0,0,CRL_FIND_ANY,NULL,NULL);
+	PCCRL_CONTEXT	Rueckrufliste=CertEnumCRLsInStore(Zertifikatsspeicher,NULL);
 #ifndef QT_NO_DEBUG
 	ulong AnzahlDerZerts=0;
+	ulong AnzahlDerCRLs=0;
 #endif
-
+	QByteArray Daten;
+	const unsigned char *p;
+	//Zertifikate
 	while(Zertifikat!=NULL)
 	{
 		//Zert bearbeiten
-		QByteArray Daten((const char*)Zertifikat->pbCertEncoded,Zertifikat->cbCertEncoded);
-		const unsigned char *p;
+		Daten=QByteArray((const char*)Zertifikat->pbCertEncoded,Zertifikat->cbCertEncoded);
 		p=(uchar*)Daten.constData();
 		X509 *X509Zert=d2i_X509(NULL,&p,Daten.size());
 #ifndef QT_NO_DEBUG
 		AnzahlDerZerts++;
 		if(X509Zert!=NULL)
-			qDebug(qPrintable(QString("Inhalt des Zerts: %1").arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,X509Zert))));
-		
+			qDebug(qPrintable(QString("Inhalt des Zerts: %1").arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,X509Zert))));		
 #endif
+		// Start Übergabe an OpenSSL
 		if(X509Zert!=NULL)
 			X509_free(X509Zert);
+		//Ende
 		//Das nächste Zert bitte
-		Zertifikat=CertFindCertificateInStore(Zertifikatsspeicher,X509_ASN_ENCODING,0,CERT_FIND_ANY,NULL,Zertifikat);
+		//Zertifikat=CertFindCertificateInStore(Zertifikatsspeicher,X509_ASN_ENCODING,0,CERT_FIND_ANY,NULL,Zertifikat);
+		Zertifikat=CertEnumCertificatesInStore(Zertifikatsspeicher,Zertifikat);
+	};
+
+	//Rückruflisten
+	while(Rueckrufliste!=NULL)
+	{
+		//Rückrufliste bearbeiten
+		Daten=QByteArray((const char*)Rueckrufliste->pbCrlEncoded,Rueckrufliste->cbCrlEncoded);
+		p=(uchar*)Daten.constData();
+		X509_CRL *X509Rueckrufliste=d2i_X509_CRL(NULL,&p,Daten.size());
+#ifndef QT_NO_DEBUG
+		AnzahlDerCRLs++;
+		if(X509Rueckrufliste!=NULL)
+			qDebug(qPrintable(QString("Inhalt der CRL: %1").arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,X509Rueckrufliste))));		
+#endif
+		// Start Übergabe an OpenSSL
+		if(X509Rueckrufliste!=NULL)
+			X509_CRL_free(X509Rueckrufliste);
+		//Ende
+		//Die nächste CRL bitte
+		//Rueckrufliste=CertFindCRLInStore(Zertifikatsspeicher,0,0,CRL_FIND_ANY,NULL,Rueckrufliste);
+		Rueckrufliste=CertEnumCRLsInStore(Zertifikatsspeicher,Rueckrufliste);
 	};
 	//Speicher freigeben wenn belegt
 	if(Zertifikat)
 		CertFreeCertificateContext(Zertifikat);
+	if(Rueckrufliste)
+		CertFreeCRLContext(Rueckrufliste);
+	//Zertspeicher schließen
 	if(!CertCloseStore(Zertifikatsspeicher,CERT_CLOSE_STORE_FORCE_FLAG))
 		qFatal(qPrintable(trUtf8("QFrankSSLZertifikatspeicher K_SpeicherLaden: konnte den %1speicher nicht schließen.").arg(K_SpeichertypeText)));
 #ifndef QT_NO_DEBUG
 	qDebug(qPrintable(QString("QFrankSSLZertifikatspeicher K_SpeicherLaden: %1speicher geladen").arg(K_SpeichertypeText)));
-	qWarning("Gelesen Zertifikate: %li",AnzahlDerZerts);
-#endif
+	qWarning(qPrintable(trUtf8("Gelesen Zertifikate: %1 Rückruflisten: %2","debug").arg(AnzahlDerZerts).arg(AnzahlDerCRLs)));
+#endif*/
 	return true;
 }
+
+BOOL QFrankSSLZertifikatspeicher::CertEnumSystemStoreRueckruf(const void *speicherplatz,DWORD parameter,PCERT_SYSTEM_STORE_INFO speicherInfos,
+																void *reserviert,void *hilfsparameter)
+{
+	//Hier Ermitteln wir die einzelnen Unterspeicher
+	((QStringList*)hilfsparameter)->append(QString(QString::fromUtf16((ushort *)speicherplatz)));	 
+	return TRUE;
+}
+
 #endif
 
 #ifndef QT_NO_DEBUG
