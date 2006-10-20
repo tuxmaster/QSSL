@@ -151,20 +151,8 @@ void QFrankSSLZertifikatspeicher::SpeicherLaden()
 	}
 	else
 	{
-#ifndef QT_NO_DEBUG
-		qDebug("QFrankSSLZertifikatspeicher Laden: Nutzerpeicher geladen.");
-#endif
 		if(!K_SpeicherLaden(QFrankSSLZertifikatspeicher::Nutzer))
-		{
-#ifndef QT_NO_DEBUG
-			qCritical(qPrintable(trUtf8("QFrankSSLZertifikatspeicher Laden: laden des Nutzerpeichers gescheitert","debug")));
-#endif
 			emit Fehler(tr("Der Zertifikatspeicher des Nutzers konnte nicht geladen werden."));
-		}
-#ifndef QT_NO_DEBUG
-		else
-			qDebug("QFrankSSLZertifikatspeicher Laden: Systemspeicher geladen.");
-#endif
 	}
 #endif
 }
@@ -388,15 +376,8 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 														break;
 													}
 #ifndef QT_NO_DEBUG
-													BIO_reset(Puffer);
-													if(X509_CRL_print(Puffer,Rueckrufliste)==1)
-													{
-														QByteArray Zerttext;
-														int Groesse=BIO_ctrl(Puffer,BIO_CTRL_PENDING,0,NULL);
-														Zerttext.resize(Groesse);
-														BIO_read(Puffer,Zerttext.data(),Groesse);
-														qDebug(qPrintable(QString("CRL Element dekodiert: %1").arg(QString(Zerttext))));
-													}													
+													qDebug(qPrintable(QString("CRL Element dekodiert: %1")
+																			  .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,Rueckrufliste)))));		
 #endif
 													break;
 			case QFrankSSLZertifikatspeicher::CA:
@@ -410,15 +391,8 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 														break;
 													}
 #ifndef QT_NO_DEBUG
-													BIO_reset(Puffer);
-													if(X509_print(Puffer,Zertifikat)==1)
-													{
-														QByteArray Zerttext;
-														int Groesse=BIO_ctrl(Puffer,BIO_CTRL_PENDING,0,NULL);
-														Zerttext.resize(Groesse);
-														BIO_read(Puffer,Zerttext.data(),Groesse);
-														qDebug(qPrintable(QString("CA Element dekodiert: %1").arg(QString(Zerttext))));
-													}													
+													qDebug(qPrintable(QString("CA Element dekodiert: %1")
+																			 .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,Rueckrufliste))));
 #endif
 													break;
 			case QFrankSSLZertifikatspeicher::Zert:
@@ -691,13 +665,20 @@ bool QFrankSSLZertifikatspeicher::K_SpeicherLaden(const QFrankSSLZertifikatspeic
 	//CERT_STORE_PROV_SYSTEM_A = Alle vorhandene Zerts
 	//Sytstem CERT_SYSTEM_STORE_LOCAL_MACHINE
 	//Nutzer CERT_SYSTEM_STORE_CURRENT_USER
+	DWORD Speicherort;
 	HCERTSTORE  Zertifikatsspeicher;
 	QString Speicher;
 	if(type==QFrankSSLZertifikatspeicher::Nutzer)
+	{
 		Speicher="My";
+		Speicherort=CERT_SYSTEM_STORE_CURRENT_USER;
+	}
 	else
+	{
 		Speicher="Root";
-	Zertifikatsspeicher=CertOpenStore(CERT_STORE_PROV_SYSTEM,X509_ASN_ENCODING,NULL,CERT_STORE_READONLY_FLAG,Speicher.utf16());
+		Speicherort=CERT_SYSTEM_STORE_LOCAL_MACHINE;
+	}
+	Zertifikatsspeicher=CertOpenStore(CERT_STORE_PROV_SYSTEM,X509_ASN_ENCODING,NULL,CERT_STORE_READONLY_FLAG|Speicherort,Speicher.utf16());
 	if(Zertifikatsspeicher==NULL)
 	{
 #ifndef QT_NO_DEBUG
@@ -707,11 +688,64 @@ bool QFrankSSLZertifikatspeicher::K_SpeicherLaden(const QFrankSSLZertifikatspeic
 #endif
 		return false;
 	}
+	//Auslesen
+	PCCERT_CONTEXT  Zertifikat=CertFindCertificateInStore(Zertifikatsspeicher,X509_ASN_ENCODING,0,CERT_FIND_ANY,NULL,NULL);
+#ifndef QT_NO_DEBUG
+	ulong AnzahlDerZerts=0;
+#endif
+
+	while(Zertifikat!=NULL)
+	{
+		//Zert bearbeiten
+		QByteArray Daten((const char*)Zertifikat->pbCertEncoded,Zertifikat->cbCertEncoded);
+		const unsigned char *p;
+		p=(uchar*)Daten.constData();
+		X509 *X509Zert=d2i_X509(NULL,&p,Daten.size());
+#ifndef QT_NO_DEBUG
+		AnzahlDerZerts++;
+		if(X509Zert!=NULL)
+			qDebug(qPrintable(QString("Inhalt des Zerts: %1").arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,X509Zert))));
+		
+#endif
+		if(X509Zert!=NULL)
+			X509_free(X509Zert);
+		//Das nächste Zert bitte
+		Zertifikat=CertFindCertificateInStore(Zertifikatsspeicher,X509_ASN_ENCODING,0,CERT_FIND_ANY,NULL,Zertifikat);
+	};
+	//Speicher freigeben wenn belegt
+	if(Zertifikat)
+		CertFreeCertificateContext(Zertifikat);
 	if(!CertCloseStore(Zertifikatsspeicher,CERT_CLOSE_STORE_FORCE_FLAG))
 		qFatal(qPrintable(trUtf8("QFrankSSLZertifikatspeicher K_SpeicherLaden: konnte den %1speicher nicht schließen.").arg(K_SpeichertypeText)));
 #ifndef QT_NO_DEBUG
 	qDebug(qPrintable(QString("QFrankSSLZertifikatspeicher K_SpeicherLaden: %1speicher geladen").arg(K_SpeichertypeText)));
+	qWarning("Gelesen Zertifikate: %li",AnzahlDerZerts);
 #endif
 	return true;
+}
+#endif
+
+#ifndef QT_NO_DEBUG
+QString	QFrankSSLZertifikatspeicher::K_ZertifikatNachText(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,void *zertifikat)
+{
+	QString Zerttext;
+	BIO *Puffer = BIO_new(BIO_s_mem());
+	int Fehlerkode;
+	if(type==QFrankSSLZertifikatspeicher::CRL)
+		Fehlerkode=X509_CRL_print(Puffer,(X509_CRL*)zertifikat);
+	else
+		Fehlerkode=X509_print(Puffer,(X509*)zertifikat);
+	if(Fehlerkode==1)
+	{
+		QByteArray Zerttextpuffer;
+		int Groesse=BIO_ctrl(Puffer,BIO_CTRL_PENDING,0,NULL);
+		Zerttextpuffer.resize(Groesse);
+		BIO_read(Puffer,Zerttextpuffer.data(),Groesse);
+		Zerttext.append(Zerttextpuffer);
+	}
+	else
+		qWarning("K_ZertifikatNachText: konnte Zertifikat nicht lesen");
+	BIO_free(Puffer);
+	return Zerttext;
 }
 #endif

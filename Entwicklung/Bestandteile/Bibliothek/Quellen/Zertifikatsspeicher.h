@@ -67,6 +67,9 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				bool 				K_Speichergeladen;
 				QString				K_SpeichertypeText;
 				void				K_SpeichertypeTextSetzen(const QFrankSSLZertifikatspeicher::Speicherort &type);
+#ifndef QT_NO_DEBUG
+				QString				K_ZertifikatNachText(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,void *zertifikat);
+#endif
 #ifndef Q_WS_WIN
 				// Unix/Linux/Mac Speicher
 				enum				LadenOderSpeichern{Laden=0x01,Speichern=0x02,Nichts=0x03};

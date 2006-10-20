@@ -1,2 +1,4 @@
 Laden der Zertifikate aus dem Windows Speicher.
+Windows Speicher CRL laden
+Auslesen der Zertifikate muss als Thread ausgelagert werden.
 Übergabe der Zertifke aus Windows/Zertspeicher an OpenSSL
