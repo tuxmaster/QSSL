@@ -26,6 +26,7 @@ static void						QtNachrichten(QtMsgType type, const char *msg);
 static QTextEdit*				Debugausgabe;
 
 class QFrankSSL;
+class QMessageBox;
 
 class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 {
@@ -35,6 +36,7 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 					~QFrankDlgHaupt();
 	private:
 					QFrankSSL*	K_SSL;
+					QMessageBox	*K_Ladehinweis;
 					bool		K_VerbindenTrennen;
 					void		SindAlleSSLVersionenDeaktiviert();
 					void		K_SteuerschaltflaechenFreigeben(const bool& freigeben=false);
@@ -54,7 +56,9 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 					void		K_TunnelAufgebaut();
 					void		K_VerbindungGetrennt(const bool &mitFehler);
 					void		K_ZertifikateLaden();
-					void		K_SpeicherFehlerWarnung(const QString &text);
+					void		K_ZertifikateLadenFertig();
+					void		K_SpeicherFehler(const QString &text);
+					void		K_SpeicherWarnung(const QString &text);
 #ifndef Q_WS_WIN
 					void		K_PasswortAbfragen();
 #endif

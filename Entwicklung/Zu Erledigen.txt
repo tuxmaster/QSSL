@@ -1,6 +1,6 @@
 Laden der Zertifikate aus dem Windows Speicher.(geht)
-Windows Speicher CRL laden(geht noch nicht)
-Windows Speicher muss noch mal überarbeitet werden, da der anders funktioniert als gedacht.
+Windows Speicher CRL laden(geht)
+Windows Speicher muss noch mal überarbeitet werden, da der anders funktioniert als gedacht.(geht)
 Jeder speicher kann unterspeicher enthalten.
 
 Auslesen der Zertifikate muss eventuell als Thread ausgelagert werden.

@@ -32,8 +32,9 @@ QFrankDlgHaupt::QFrankDlgHaupt(QWidget* eltern):QDialog(eltern)
 	qInstallMsgHandler(QtNachrichten);
 	K_SSL=new QFrankSSL(this);
 	connect(K_SSL,SIGNAL(SSLFehler(const QString)),this,SLOT(K_EsGabEinFehler(const QString&)));
-	connect(K_SSL->Zertifikatsspeicher(),SIGNAL(Fehler(const QString&)),this,SLOT(K_SpeicherFehlerWarnung(const QString&)));
-	connect(K_SSL->Zertifikatsspeicher(),SIGNAL(Warnung(const QString&)),this,SLOT(K_SpeicherFehlerWarnung(const QString&)));
+	connect(K_SSL->Zertifikatsspeicher(),SIGNAL(Fehler(const QString&)),this,SLOT(K_SpeicherFehler(const QString&)));
+	connect(K_SSL->Zertifikatsspeicher(),SIGNAL(Warnung(const QString&)),this,SLOT(K_SpeicherWarnung(const QString&)));
+	connect(K_SSL->Zertifikatsspeicher(),SIGNAL(Fertig()),this,SLOT(K_ZertifikateLadenFertig()));
 	connect(K_SSL,SIGNAL(DatenBereitZumAbhohlen(const QByteArray&)),this,SLOT(K_DatenSindDa(const QByteArray&)));
 	connect(K_SSL,SIGNAL(TunnelBereit()),this,SLOT(K_TunnelAufgebaut()));
 	connect(K_SSL,SIGNAL(VerbindungGetrennt(const bool)),this,SLOT(K_VerbindungGetrennt(const bool&)));
@@ -145,9 +146,22 @@ void QFrankDlgHaupt::K_EsGabEinFehler(const QString & fehlertext)
 	sfSenden->setEnabled(false);
 }
 
-void QFrankDlgHaupt::K_SpeicherFehlerWarnung(const QString &text)
+void QFrankDlgHaupt::K_ZertifikateLadenFertig()
+{	
+	K_Ladehinweis->close();
+	delete K_Ladehinweis;
+}
+
+void QFrankDlgHaupt::K_SpeicherFehler(const QString &text)
 {
-	QMessageBox::warning(this,tr("Zertspeicher Warnung/Fehler"),text);
+	K_Ladehinweis->close();
+	delete K_Ladehinweis;
+	QMessageBox::critical(this,tr("Zertspeicher Warnung/Fehler"),text);	
+}
+
+void QFrankDlgHaupt::K_SpeicherWarnung(const QString &text)
+{
+	QMessageBox::warning(this,tr("Zertspeicher Warnung/Fehler"),text);	
 }
 
 void QFrankDlgHaupt::K_TunnelAufgebaut()
@@ -213,6 +227,8 @@ void QFrankDlgHaupt::on_txtEmpfangen_textChanged()
 
 void QFrankDlgHaupt::K_ZertifikateLaden()
 {
+	K_Ladehinweis=new QMessageBox(QMessageBox::Information,tr("Bitte warten"),tr("Die Zertifikate werden geladen."));
+	K_Ladehinweis->show();
 	K_SSL->Zertifikatsspeicher()->SpeicherLaden();
 }
 
@@ -238,4 +254,6 @@ void QtNachrichten(QtMsgType type, const char *msg)
 							abort();
 #endif
 	}
+	// Damit die GUI nicht einfriert
+	qApp->processEvents();
 }

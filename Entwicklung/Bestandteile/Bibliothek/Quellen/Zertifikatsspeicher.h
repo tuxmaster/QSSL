@@ -38,14 +38,18 @@
 	#define DLL_EXPORT
 #endif
 
+typedef struct x509_st X509;
+typedef struct X509_crl_st X509_CRL;
+
 class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 {
 	Q_OBJECT
 	public:
 				QFrankSSLZertifikatspeicher(QObject* eltern);
+				~QFrankSSLZertifikatspeicher();
 				enum				ArtDesZertifikats{CRL=0x00,CA=0x01,Zert=0x02};
 				Q_DECLARE_FLAGS(Zertifikatstype,ArtDesZertifikats)
-				const QStringList	ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type)const;
+				const QStringList	ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type);
 				enum				ArtDesSpeichers{System=0x01,Nutzer=0x02};
 				Q_DECLARE_FLAGS(Speicherort,ArtDesSpeichers)
 #ifndef Q_WS_WIN
@@ -59,6 +63,7 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				void				SpeicherLaden();
 
 	signals:
+				void				Fertig()const;
 				void				Fehler(const QString &fehlertext)const;
 				void				Warnung(const QString &warnungstext)const;
 #ifndef Q_WS_WIN
@@ -66,12 +71,12 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 #endif
 
 	private:
+				QList<X509*>		*K_Zertifikatsliste;
+				QList<X509_CRL*>	*K_Rueckrufliste;
 				bool 				K_Speichergeladen;
 				QString				K_SpeichertypeText;
 				void				K_SpeichertypeTextSetzen(const QFrankSSLZertifikatspeicher::Speicherort &type);
-#ifndef QT_NO_DEBUG
 				QString				K_ZertifikatNachText(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,void *zertifikat);
-#endif
 #ifndef Q_WS_WIN
 				// Unix/Linux/Mac Speicher
 				enum				LadenOderSpeichern{Laden=0x01,Speichern=0x02,Nichts=0x03};
@@ -96,6 +101,7 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 #else
 				// Windows Speicher
 				bool				K_SpeicherLaden(const QFrankSSLZertifikatspeicher::Speicherort &type);
+				bool				K_UnterspeicherLesen(const QString &unterspeichername,const DWORD &speicherort);
 				static BOOL	WINAPI 	CertEnumSystemStoreRueckruf(const void *speicherplatz,DWORD parameter,PCERT_SYSTEM_STORE_INFO speicherInfos,
 																void *reserviert,void *hilfsparameter);
 #endif
