@@ -148,14 +148,10 @@ void QFrankDlgHaupt::K_EsGabEinFehler(const QString & fehlertext)
 
 void QFrankDlgHaupt::K_ZertifikateLadenFertig()
 {	
-	K_Ladehinweis->close();
-	delete K_Ladehinweis;
 }
 
 void QFrankDlgHaupt::K_SpeicherFehler(const QString &text)
 {
-	K_Ladehinweis->close();
-	delete K_Ladehinweis;
 	QMessageBox::critical(this,tr("Zertspeicher Warnung/Fehler"),text);	
 }
 
@@ -227,8 +223,6 @@ void QFrankDlgHaupt::on_txtEmpfangen_textChanged()
 
 void QFrankDlgHaupt::K_ZertifikateLaden()
 {
-	K_Ladehinweis=new QMessageBox(QMessageBox::Information,tr("Bitte warten"),tr("Die Zertifikate werden geladen."));
-	K_Ladehinweis->show();
 	K_SSL->Zertifikatsspeicher()->SpeicherLaden();
 }
 

@@ -40,18 +40,20 @@
 
 typedef struct x509_st X509;
 typedef struct X509_crl_st X509_CRL;
+typedef struct x509_store_st X509_STORE;
+typedef struct ssl_ctx_st SSL_CTX;
 
 class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 {
 	Q_OBJECT
 	public:
-				QFrankSSLZertifikatspeicher(QObject* eltern);
+				QFrankSSLZertifikatspeicher(QObject* eltern,SSL_CTX *openSSLObjekt);
 				~QFrankSSLZertifikatspeicher();
 				enum				ArtDesZertifikats{CRL=0x00,CA=0x01,Zert=0x02};
 				Q_DECLARE_FLAGS(Zertifikatstype,ArtDesZertifikats)
 				const QStringList	ListeAllerZertifikate(const QFrankSSLZertifikatspeicher::Zertifikatstype &type);
 				enum				ArtDesSpeichers{System=0x01,Nutzer=0x02};
-				Q_DECLARE_FLAGS(Speicherort,ArtDesSpeichers)
+				Q_DECLARE_FLAGS(Speicherort,ArtDesSpeichers)				
 #ifndef Q_WS_WIN
 				void				PasswortFuerDenSpeicher(QString &passwort);
 				void				ZertifikatSpeichern(const QFrankSSLZertifikatspeicher::Speicherort &ort,
@@ -73,6 +75,8 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 	private:
 				QList<X509*>		*K_Zertifikatsliste;
 				QList<X509_CRL*>	*K_Rueckrufliste;
+				X509_STORE			*K_Zertifikate;
+				SSL_CTX				*K_openSSLObjekt;
 				bool 				K_Speichergeladen;
 				QString				K_SpeichertypeText;
 				void				K_SpeichertypeTextSetzen(const QFrankSSLZertifikatspeicher::Speicherort &type);
@@ -105,6 +109,8 @@ class DLL_EXPORT QFrankSSLZertifikatspeicher: public QObject
 				static BOOL	WINAPI 	CertEnumSystemStoreRueckruf(const void *speicherplatz,DWORD parameter,PCERT_SYSTEM_STORE_INFO speicherInfos,
 																void *reserviert,void *hilfsparameter);
 #endif
+	private slots:
+				void				K_ZertspeicherAnOpenSSLUebergeben();
 
 };
 #endif

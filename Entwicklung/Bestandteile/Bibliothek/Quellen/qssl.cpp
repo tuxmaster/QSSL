@@ -38,14 +38,13 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	qWarning(qPrintable(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!","debug")));
 #endif
 	//Der 1. erstellt den Zertifikatsspeicher und initialisiert OpenSSL
-	if(K_Zertifikatspeicher==0)
-		K_Zertifikatspeicher=new QFrankSSLZertifikatspeicher(QCoreApplication::instance());
 	if(K_ZaehlerFuerKlasseninstanzen==0)
 	{
-		//OpenSSL initialisieren, hier lassen wir erst mal alle SSL Versionen zu
 		SSL_load_error_strings();
 		SSL_library_init();
+		//OpenSSL initialisieren, hier lassen wir erst mal alle SSL Versionen zu
 		K_OpenSSLStruktur=SSL_CTX_new(SSLv23_client_method());
+		K_Zertifikatspeicher=new QFrankSSLZertifikatspeicher(QCoreApplication::instance(),K_OpenSSLStruktur);
 	}
 	K_ZaehlerFuerKlasseninstanzen++;
 	K_KeineOpenSSLStrukturText=trUtf8("OpenSSL Struktur nicht verfügbar\r\n");
@@ -523,11 +522,11 @@ void QFrankSSL::K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fe
 #ifndef QT_NO_DEBUG
 													qDebug("QFrank SSL Verbindung: SSL Server Verbindung getrennt");
 #endif
-													/*if(K_Verbindungsstatus==QFrankSSL::VERBUNDEN)
+													if(K_Verbindungsstatus==QFrankSSL::VERBUNDEN)
 														emit VerbindungGetrennt(false);
 													else
 														emit SSLFehler(K_SSLServerVerbindungVomServerGetrenntText);
-													break;
+													break;/*
 		default:
 													qFatal("QFrank SSL Verbindung: Zustand nicht bearbeitet Code: %i",fehler);
 													break;*/	

@@ -3,6 +3,8 @@ Windows Speicher CRL laden(geht)
 Windows Speicher muss noch mal überarbeitet werden, da der anders funktioniert als gedacht.(geht)
 Jeder speicher kann unterspeicher enthalten.
 
-Auslesen der Zertifikate muss eventuell als Thread ausgelagert werden.
-Übergabe der Zertifke aus Windows/Zertspeicher an OpenSSL
+Auslesen der Zertifikate muss eventuell als Thread ausgelagert werden.(nicht nötig)
+Übergabe der Zertifke aus Windows/Zertspeicher an OpenSSL(geht)
+Überprüfung desvorgezeigten Zertifikats der Gegenstelle.
+Unerklärliche Abstürze
 Private Schlüssel Windows/Zertspeicher

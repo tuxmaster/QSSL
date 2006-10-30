@@ -20,6 +20,7 @@
 #include "Zertifikatsspeicher.h"
 #include <openssl/x509.h>
 #include <openssl/pem.h>
+#include <openssl/ssl.h>
 
 //Den Filter brauchen wir nur unter nicht Windows Sytemen, da wir unter Windows den Systemeigenen nutzen.
 #ifndef Q_WS_WIN
@@ -27,7 +28,7 @@
 #include <QtXml>
 #endif
 
-QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObject(eltern)
+QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern,SSL_CTX *openSSLObjekt):QObject(eltern)
 {
 	//Warnung bei Debug
 #ifndef QT_NO_DEBUG
@@ -46,7 +47,12 @@ QFrankSSLZertifikatspeicher::QFrankSSLZertifikatspeicher(QObject* eltern):QObjec
 #endif
 	K_Zertifikatsliste=new QList<X509*>;
 	K_Rueckrufliste=new QList<X509_CRL*>;
-	K_Speichergeladen=false;	
+	K_Zertifikate=X509_STORE_new();
+	if(K_Zertifikate==NULL)
+		qFatal("QFrankSSLZertifikatspeicher: konnte OpenSSL Zertspeicher nicht erstellen");
+	K_Speichergeladen=false;
+	K_openSSLObjekt=openSSLObjekt;
+	connect(this,SIGNAL(Fertig()),this,SLOT(K_ZertspeicherAnOpenSSLUebergeben()));
 }
 
 QFrankSSLZertifikatspeicher::~QFrankSSLZertifikatspeicher()
@@ -60,6 +66,7 @@ QFrankSSLZertifikatspeicher::~QFrankSSLZertifikatspeicher()
 		X509_CRL_free(Rueckrufliste);
 	delete K_Rueckrufliste;
 	delete K_Zertifikatsliste;
+	X509_STORE_free(K_Zertifikate);
 }
 
 void QFrankSSLZertifikatspeicher::SpeicherLaden()
@@ -177,12 +184,26 @@ const QStringList QFrankSSLZertifikatspeicher::ListeAllerZertifikate(const QFran
 	QStringList Liste;
 	X509 *Zertifikat;
 	X509_CRL *Rueckrufliste;
-	Liste<<tr("Zertifikate:");
-	foreach(Zertifikat,*K_Zertifikatsliste);
-		Liste<<	K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,Zertifikat);
-	Liste<<trUtf8("Rückruflisten:");
-	foreach(Rueckrufliste,*K_Rueckrufliste);
-		Liste<<	K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,Rueckrufliste);
+	if(type==QFrankSSLZertifikatspeicher::CA)
+	{
+		if(K_Zertifikatsliste->empty())
+			Liste<<tr("keine vorhanden");
+		else
+		{ 
+			foreach(Zertifikat,*K_Zertifikatsliste);
+				Liste<<	K_ZertifikatNachText(type,Zertifikat);
+		}
+	}
+	else
+	{
+		if(K_Rueckrufliste->empty())
+			Liste<<tr("keine vorhanden");
+		else
+		{
+			foreach(Rueckrufliste,*K_Rueckrufliste);
+				Liste<<	K_ZertifikatNachText(type,Rueckrufliste);
+		}
+	}
 	return Liste;
 }
 
@@ -401,8 +422,10 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 													}
 													K_Rueckrufliste->append(Rueckrufliste);
 #ifndef QT_NO_DEBUG
+#ifndef KURZE_DEBUG_INFO
 													qDebug(qPrintable(QString("CRL Element dekodiert: %1")
-																			  .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,Rueckrufliste))));		
+																			  .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,Rueckrufliste))));	
+#endif
 #endif
 													break;
 			case QFrankSSLZertifikatspeicher::CA:
@@ -415,10 +438,12 @@ bool QFrankSSLZertifikatspeicher::K_XMLEintragLesen(const QFrankSSLZertifikatspe
 														Fehler=true;
 														break;
 													}
-													K_Zertifikatsliste.append(Zertifikat);
+													K_Zertifikatsliste->append(Zertifikat);
 #ifndef QT_NO_DEBUG
+#ifndef KURZE_DEBUG_INFO
 													qDebug(qPrintable(QString("CA Element dekodiert: %1")
 																			 .arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,Zertifikat))));
+#endif
 #endif
 													break;
 			case QFrankSSLZertifikatspeicher::Zert:
@@ -762,8 +787,10 @@ bool QFrankSSLZertifikatspeicher::K_UnterspeicherLesen(const QString &unterspeic
 		X509 *X509Zert=d2i_X509(NULL,&p,Daten.size());
 #ifndef QT_NO_DEBUG
 		AnzahlDerZerts++;
+#ifndef KURZE_DEBUG_INFO
 		if(X509Zert!=NULL)
-			qDebug(qPrintable(QString("Inhalt des Zerts: %1").arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,X509Zert))));		
+			qDebug(qPrintable(QString("Inhalt des Zerts: %1").arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CA,X509Zert))));
+#endif
 #endif
 		// Start Übergabe an OpenSSL
 		K_Zertifikatsliste->append(X509Zert);
@@ -783,8 +810,10 @@ bool QFrankSSLZertifikatspeicher::K_UnterspeicherLesen(const QString &unterspeic
 		X509_CRL *X509Rueckrufliste=d2i_X509_CRL(NULL,&p,Daten.size());
 #ifndef QT_NO_DEBUG
 		AnzahlDerCRLs++;
+#ifndef KURZE_DEBUG_INFO
 		if(X509Rueckrufliste!=NULL)
-			qDebug(qPrintable(QString("Inhalt der CRL: %1").arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,X509Rueckrufliste))));		
+			qDebug(qPrintable(QString("Inhalt der CRL: %1").arg(K_ZertifikatNachText(QFrankSSLZertifikatspeicher::CRL,X509Rueckrufliste))));
+#endif
 #endif
 		// Start Übergabe an OpenSSL
 		K_Rueckrufliste->append(X509Rueckrufliste);
@@ -822,6 +851,26 @@ BOOL QFrankSSLZertifikatspeicher::CertEnumSystemStoreRueckruf(const void *speich
 
 #endif
 
+void QFrankSSLZertifikatspeicher::K_ZertspeicherAnOpenSSLUebergeben()
+{
+	//Zertifikate an in den OpenSSL Speicher kopieren;
+	X509 *Zertifikat;
+	X509_CRL *Rueckrufliste;
+	foreach(Zertifikat,*K_Zertifikatsliste)
+	{
+		X509_STORE_add_cert(K_Zertifikate,Zertifikat);
+		//if(X509_STORE_add_cert(K_Zertifikate,Zertifikat)!=1)
+		//	qFatal(qPrintable(trUtf8("QFrankSSLZertifikatspeicher: konnte Zertifikat nicht an OpenSSL übergeben")));
+	}
+	foreach(Rueckrufliste,*K_Rueckrufliste)
+	{
+		X509_STORE_add_crl(K_Zertifikate,Rueckrufliste);
+		//if(X509_STORE_add_crl(K_Zertifikate,Rueckrufliste)!=1)
+		//	qFatal(qPrintable(trUtf8("QFrankSSLZertifikatspeicher: konnte Rückrufliste nicht an OpenSSL übergeben")));
+	}
+	SSL_CTX_set_cert_store(K_openSSLObjekt,K_Zertifikate);
+}
+
 QString	QFrankSSLZertifikatspeicher::K_ZertifikatNachText(const QFrankSSLZertifikatspeicher::Zertifikatstype &type,void *zertifikat)
 {
 	QString Zerttext;
@@ -844,4 +893,3 @@ QString	QFrankSSLZertifikatspeicher::K_ZertifikatNachText(const QFrankSSLZertifi
 	BIO_free(Puffer);
 	return Zerttext;
 }
-

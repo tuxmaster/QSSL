@@ -22,6 +22,8 @@ CONFIG		+= dll
 include (../../Vorgaben.pri)
 VERSION		= 0.1.0
 TARGET		= qssl
+#Entfernen für mehr Debugausgaben
+DEFINES			+= KURZE_DEBUG_INFO
 win32{
 	DEFINES		+= DLL_BAUEN	
 	INCLUDEPATH	+=../../../../../OpenSSL/0.9.8d/include

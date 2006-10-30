@@ -26,7 +26,6 @@ static void						QtNachrichten(QtMsgType type, const char *msg);
 static QTextEdit*				Debugausgabe;
 
 class QFrankSSL;
-class QMessageBox;
 
 class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 {
@@ -36,7 +35,6 @@ class QFrankDlgHaupt: public QDialog, private Ui::DlgDemoBasis
 					~QFrankDlgHaupt();
 	private:
 					QFrankSSL*	K_SSL;
-					QMessageBox	*K_Ladehinweis;
 					bool		K_VerbindenTrennen;
 					void		SindAlleSSLVersionenDeaktiviert();
 					void		K_SteuerschaltflaechenFreigeben(const bool& freigeben=false);
