@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006 Frank Büttner frank-buettner@gmx.net
+ *  Copyright (C) 2006 - 2007 Frank Büttner frank-buettner@gmx.net
  * 
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -35,7 +35,8 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	}
 	//Warnung bei DEBUG
 #ifndef QT_NO_DEBUG
-	qWarning(qPrintable(trUtf8("WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!","debug")));
+	qWarning(qPrintable(trUtf8("%1 Konstruktor: WARNUNG Debugversion wird benutzt.\r\nEs können sicherheitsrelevante Daten ausgegeben werden!!","debug")
+								.arg(this->metaObject()->className())));
 #endif
 	//Der 1. erstellt den Zertifikatsspeicher und initialisiert OpenSSL
 	if(K_ZaehlerFuerKlasseninstanzen==0)
@@ -59,7 +60,7 @@ QFrankSSL::QFrankSSL(QObject* eltern): QTcpSocket(eltern)
 	if(K_OpenSSLStruktur==NULL)
 	{
 #ifndef QT_NO_DEBUG
-		qCritical("QFrankSSL OpenSSL Struktur konnte nicht erstellt werden.");
+		qCritical("%s Konstruktor: OpenSSL Struktur konnte nicht erstellt werden.",this->metaObject()->className());
 		qCritical(K_SSLFehlertext().toAscii().constData());
 #endif
 		QTimer::singleShot(0,this,SLOT(K_FehlertextSenden()));
@@ -98,7 +99,7 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 	{
 		K_OpenSSLFehlerText=K_KeineOpenSSLStrukturText+K_SSLFehlertext();
 #ifndef QT_NO_DEBUG
-		qCritical("QFrankSSL SSL Struktur aufbauen: OpenSSL Struktur fehlt");
+		qCritical("%s K_SSLStrukturAufbauen: OpenSSL Struktur fehlt",this->metaObject()->className());
 		qCritical(qPrintable(K_SSLFehlertext()));
 #endif
 		K_AllesZuruecksetzen();
@@ -109,7 +110,7 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 	{
 		K_OpenSSLFehlerText=K_SSLFehlertext();
 #ifndef QT_NO_DEBUG
-		qWarning("QFrankSSL SSL Struktur aufbauen: fehlgeschlagen");
+		qWarning("%s K_SSLStrukturAufbauen: fehlgeschlagen",this->metaObject()->className());
 		qWarning()<<K_OpenSSLFehlerText;
 #endif
 		K_AllesZuruecksetzen();
@@ -127,7 +128,7 @@ const bool QFrankSSL::K_SSLStrukturAufbauen()
 	SSL_set_info_callback(K_SSLStruktur,K_SSL_Info_Callback);
 	
 #ifndef QT_NO_DEBUG
-	qDebug("QFrankSSL SSL Struktur aufbauen: erfolgreich");
+	qDebug("%s K_SSLStrukturAufbauen: erfolgreich",this->metaObject()->className());
 	QString SSLOptionen="SSL Optionen:";
 	long Optionen=SSL_set_options(K_SSLStruktur,Parameter);
 	if(Optionen&SSL_OP_NO_SSLv2)
@@ -321,7 +322,7 @@ void QFrankSSL::VerbindungHerstellen(const QString &rechnername,const quint16 &p
 void QFrankSSL::K_VerbindungZumServerGetrennt()
 {
 #ifndef QT_NO_DEBUG
-	qDebug("QFrankSSL Verbindung zum Server verlohren.");
+	qDebug("%2 VerbindungZumServerGetrennt",this->metaObject()->className());
 #endif
 	K_AllesZuruecksetzen();
 	emit VerbindungGetrennt(false);
@@ -449,7 +450,7 @@ void QFrankSSL::K_FehlertextSenden()
 void QFrankSSL::VerbindungTrennen()
 {
 #ifndef QT_NO_DEBUG
-	qDebug("QFrankSSL Verbindung trennen");
+	qDebug("%s VerbindungTrennen",this->metaObject()->className());
 #endif
 	if(K_SSLStruktur==NULL)
 		return;
@@ -465,7 +466,7 @@ void QFrankSSL::VerbindungTrennen()
 void QFrankSSL::K_AllesZuruecksetzen()
 {	
 #ifndef QT_NO_DEBUG
-	qDebug(qPrintable(trUtf8("QFrankSSL alles zurücksetzen","debug")));
+	qDebug("%s K_AllesZuruecksetzen",this->metaObject()->className());
 #endif
 	if(state()==QAbstractSocket::ConnectedState)
 		disconnectFromHost();
@@ -474,8 +475,7 @@ void QFrankSSL::K_AllesZuruecksetzen()
 	{
 		if(K_ListeDerSSLVerbindungen.contains(K_SSLStruktur))
 			K_ListeDerSSLVerbindungen.remove(K_SSLStruktur);
-		SSL_free(K_SSLStruktur);
-		
+		SSL_free(K_SSLStruktur);		
 	}
 	K_SSLStruktur=NULL;
 	K_Verbindungsstatus=QFrankSSL::GETRENNT;
@@ -520,11 +520,9 @@ void QFrankSSL::K_SocketfehlerAufgetreten(const QAbstractSocket::SocketError &fe
 													break;
 		case QAbstractSocket::RemoteHostClosedError:
 #ifndef QT_NO_DEBUG
-													qDebug("QFrank SSL Verbindung: SSL Server Verbindung getrennt");
+													qDebug("%s K_SocketfehlerAufgetreten: SSL Server Verbindung getrennt",this->metaObject()->className());
 #endif
-													if(K_Verbindungsstatus==QFrankSSL::VERBUNDEN)
-														emit VerbindungGetrennt(false);
-													else
+													if(K_Verbindungsstatus!=QFrankSSL::VERBUNDEN)
 														emit SSLFehler(K_SSLServerVerbindungVomServerGetrenntText);
 													break;/*
 		default:
@@ -542,7 +540,7 @@ void QFrankSSL::K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe)
 	//int Wo=wo&~SSL_ST_MASK;
 	if(!K_ListeDerSSLVerbindungen.contains(ssl))
 		qFatal("QFrankSSL SSL_Info_Callback: Das SSL Objekt befindet sich nicht in der Tabelle!!");
-	qDebug("wo=0x%X",wo);
+	//qDebug("wo=0x%X",wo);
 	switch(wo)
 	{
 		case SSL_CB_CONNECT_EXIT:
@@ -558,7 +556,7 @@ void QFrankSSL::K_SSL_Info_Callback(const SSL *ssl,int wo,int rueckgabe)
 #ifndef QT_NO_DEBUG
 									qCritical("QFrankSSL SSL_Info_Callback: meldet einen Alarm");
 									qCritical("Art des Alams: %s\r\nBeschreibung: %s",Alarmtype.toAscii().constData(),Alarmtext.toAscii().constData());
-#endif
+#endif									
 									break;
 	}
 

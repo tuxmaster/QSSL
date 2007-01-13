@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006 Frank Büttner frank-buettner@gmx.net
+ *  Copyright (C) 2006 - 2007 Frank Büttner frank-buettner@gmx.net
  * 
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -66,7 +66,7 @@ QFrankSSLZertifikatspeicher::~QFrankSSLZertifikatspeicher()
 		X509_CRL_free(Rueckrufliste);
 	delete K_Rueckrufliste;
 	delete K_Zertifikatsliste;
-	X509_STORE_free(K_Zertifikate);
+	//X509_STORE_free(K_Zertifikate);
 }
 
 void QFrankSSLZertifikatspeicher::SpeicherLaden()

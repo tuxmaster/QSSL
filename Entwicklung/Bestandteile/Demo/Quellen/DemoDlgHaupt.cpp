@@ -128,7 +128,7 @@ void QFrankDlgHaupt::on_sfVerbinden_released()
 		K_SSL->VerbindungHerstellen(txtServer->text(),intPort->value());
 	}
 	else
-	{
+	{		
 		//Trennen vom SSL Server
 		sfVerbinden->setText("Verbinden");
 		K_SteuerschaltflaechenFreigeben(true);
